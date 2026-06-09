@@ -1,0 +1,586 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>线索管理 - 获客系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#333;-webkit-text-size-adjust:100%}
+a{color:#1890ff;text-decoration:none}
+.topnav{background:#001529;color:#fff;padding:0 24px;display:flex;align-items:center;height:48px;position:sticky;top:0;z-index:100;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.topnav .logo{font-size:16px;font-weight:600;margin-right:32px;white-space:nowrap}
+.topnav a{color:rgba(255,255,255,.7);margin-right:24px;font-size:14px;white-space:nowrap;padding:12px 0}
+.topnav a:hover,.topnav a.active{color:#fff}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.panel{background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.panel-title{font-size:15px;font-weight:600;margin-bottom:16px}
+/* Level quick filter bar */
+.level-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.level-item{padding:10px 18px;border-radius:8px;cursor:pointer;transition:all .2s;text-align:center;min-width:100px;border:2px solid transparent}
+.level-item:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.level-item.active{box-shadow:0 4px 12px rgba(0,0,0,.15);transform:translateY(-2px)}
+.level-all{background:#f5f5f5;color:#333}
+.level-all.active{border-color:#333}
+.level-S{background:#fff1f0;color:#cf1322}
+.level-S.active{border-color:#cf1322}
+.level-A{background:#fff7e6;color:#d46b08}
+.level-A.active{border-color:#d46b08}
+.level-B{background:#e6f7ff;color:#1890ff}
+.level-B.active{border-color:#1890ff}
+.level-C{background:#f5f5f5;color:#8c8c8c}
+.level-C.active{border-color:#8c8c8c}
+.level-item .lv{font-size:20px;font-weight:700}
+.level-item .cnt{font-size:12px;margin-top:2px}
+/* Category filter bar */
+.cat-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.cat-item{padding:8px 16px;border-radius:6px;cursor:pointer;transition:all .15s;font-size:13px;border:2px solid transparent;min-width:90px;text-align:center}
+.cat-item:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.cat-item.active{box-shadow:0 2px 8px rgba(0,0,0,.12);transform:translateY(-1px)}
+.cat-all{background:#f5f5f5;color:#333}
+.cat-all.active{border-color:#333}
+.cat-mo{background:#f9f0ff;color:#722ed1}
+.cat-mo.active{border-color:#722ed1}
+.cat-glass{background:#e6fffb;color:#13c2c2}
+.cat-glass.active{border-color:#13c2c2}
+.cat-pv{background:#fffbe6;color:#faad14}
+.cat-pv.active{border-color:#faad14}
+/* Quality bar */
+.quality-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.q-item{padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;transition:all .15s}
+.q-item:hover{transform:translateY(-1px)}
+.q-all{background:#f0f2f5;color:#333}
+.q-hot{background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f}
+.q-cold{background:#f5f5f5;color:#8c8c8c;border:1px solid #e8e8e8}
+.q-item.active{box-shadow:0 2px 6px rgba(0,0,0,.1)}
+/* Filter bar */
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px;padding:12px;background:#fafafa;border-radius:6px}
+.filter-bar label{font-size:12px;color:#8c8c8c}
+.filter-bar select{padding:6px 10px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;background:#fff;min-width:100px}
+.filter-bar .btn{padding:6px 16px;border:1px solid #1890ff;border-radius:4px;font-size:13px;cursor:pointer;background:#1890ff;color:#fff}
+.filter-bar .btn-reset{background:#fff;color:#8c8c8c;border-color:#d9d9d9}
+/* Table */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:800px}
+th{text-align:left;padding:10px 12px;background:#fafafa;color:#8c8c8c;font-weight:500;border-bottom:1px solid #f0f0f0;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+tr:hover{background:#f5f7fa}
+tr.row-S{background:#fff1f0}
+tr.row-S:hover{background:#ffe7e6}
+/* Tags */
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;white-space:nowrap}
+.tag-new{background:#e6f7ff;color:#1890ff}
+.tag-contacted{background:#fff7e6;color:#fa8c16}
+.tag-interested{background:#f6ffed;color:#52c41a}
+.tag-quoting{background:#f9f0ff;color:#722ed1}
+.tag-closed_won{background:#b7eb8f;color:#135200}
+.tag-closed_lost{background:#ffa39e;color:#cf1322}
+.lv-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;min-width:32px;text-align:center}
+.lv-S{background:#cf1322;color:#fff}
+.lv-A{background:#d46b08;color:#fff}
+.lv-B{background:#1890ff;color:#fff}
+.lv-C{background:#d9d9d9;color:#666}
+.phone-yes{color:#52c41a;font-weight:500}
+.phone-no{color:#ccc;font-size:12px}
+.optout-tag{background:#ffa39e;color:#cf1322;font-size:11px;padding:1px 6px;border-radius:3px}
+.sleep-tag{background:#d9d9d9;color:#666;font-size:11px;padding:1px 6px;border-radius:3px}
+.score-bar{display:inline-flex;align-items:center;gap:4px}
+.score-bar .bar{width:40px;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.score-bar .bar-fill{height:100%;border-radius:3px}
+.btn-sm{padding:4px 10px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;cursor:pointer;background:#fff;color:#333;text-decoration:none;display:inline-block;min-height:30px}
+.btn-sm:hover{border-color:#1890ff;color:#1890ff}
+.pagination{display:flex;gap:4px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.pagination a{padding:6px 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px}
+.pagination a.active{background:#1890ff;color:#fff;border-color:#1890ff}
+
+/* Bar chart */
+.chart-panel{margin-bottom:16px}
+.chart-grid{display:flex;align-items:flex-end;gap:8px;height:160px;padding:10px 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chart-bar{display:flex;flex-direction:column;align-items:center;min-width:60px;flex-shrink:0;cursor:pointer;transition:all .2s}
+.chart-bar:hover{transform:scale(1.05)}
+.chart-bar .bar-rect{width:40px;border-radius:4px 4px 0 0;transition:height .5s;position:relative}
+.chart-bar .bar-rect .bar-val{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;white-space:nowrap}
+.chart-bar .bar-label{font-size:11px;margin-top:6px;text-align:center;color:#666;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chart-bar .bar-phone{font-size:10px;color:#8c8c8c}
+.chart-legend{display:flex;gap:16px;font-size:11px;color:#8c8c8c;margin-top:4px;flex-wrap:wrap}
+.chart-legend span{display:flex;align-items:center;gap:4px}
+.chart-legend .dot{width:10px;height:10px;border-radius:2px}
+.chart-toggle{display:flex;gap:8px;margin-bottom:8px}
+.chart-toggle button{padding:4px 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;cursor:pointer;background:#fff}
+.chart-toggle button.active{background:#1890ff;color:#fff;border-color:#1890ff}
+
+@media(max-width:768px){
+    .container{padding:12px}
+    .filter-bar{flex-direction:column}
+    .filter-bar select{width:100%;padding:10px;font-size:14px}
+    .filter-bar .btn{width:100%;padding:12px;font-size:15px;text-align:center}
+    .level-bar{gap:6px}
+    .level-item{min-width:70px;padding:8px 10px}
+    .level-item .lv{font-size:16px}
+    .quality-bar{flex-direction:column}
+    .quality-bar .q-item{padding:12px;text-align:center}
+}
+
+.toast-box{position:fixed;right:16px;bottom:16px;z-index:99999;display:flex;flex-direction:column;gap:8px}
+.toast-msg{padding:10px 14px;border-radius:6px;background:#fffbe6;border:1px solid #ffe58f;color:#ad6800;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.toast-msg.error{background:#fff1f0;border:1px solid #ffa39e;color:#a8071a}
+.toast-msg.ok{background:#f6ffed;border:1px solid #b7eb8f;color:#237804}
+</style>
+</head>
+<body>
+<div class="topnav">
+    <div class="logo">获客管理系统</div>
+    <a href="/">仪表盘</a>
+    <a href="/leads" class="active">线索管理</a>
+    <a href="/harvest">采集控制</a>
+</div>
+<div class="container">
+    <!-- Type distribution chart -->
+    <div class="panel chart-panel">
+        <div class="panel-title">客户类型分布</div>
+        <div class="chart-toggle">
+            <button class="active" onclick="loadChart('type',event)">按类型</button>
+            <button onclick="loadChart('area',event)">按区域</button>
+        </div>
+        <div class="chart-legend">
+            <span><div class="dot" style="background:#1890ff"></div>总线索</span>
+            <span><div class="dot" style="background:#52c41a"></div>有电话</span>
+        </div>
+        <div class="chart-grid" id="chartGrid"></div>
+    </div>
+
+    <!-- Category quick filter -->
+    <div class="cat-bar">
+        <div class="cat-item cat-all {% if not business_category %}active{% endif %}" onclick="setFilter('business_category','')">
+            全部品类 <span style="font-size:12px;color:#8c8c8c">{{ cat_counts.get('all', 0) }}</span>
+        </div>
+        <div class="cat-item cat-mo {% if business_category=='膜结构' %}active{% endif %}" onclick="setFilter('business_category','膜结构')">
+            膜结构 <span style="font-size:12px;color:#722ed1">{{ cat_counts.get('膜结构', 0) }}</span>
+        </div>
+        <div class="cat-item cat-glass {% if business_category=='玻璃遮阳棚' %}active{% endif %}" onclick="setFilter('business_category','玻璃遮阳棚')">
+            玻璃遮阳棚 <span style="font-size:12px;color:#13c2c2">{{ cat_counts.get('玻璃遮阳棚', 0) }}</span>
+        </div>
+        <div class="cat-item cat-pv {% if business_category=='光伏车棚' %}active{% endif %}" onclick="setFilter('business_category','光伏车棚')">
+            光伏车棚 <span style="font-size:12px;color:#faad14">{{ cat_counts.get('光伏车棚', 0) }}</span>
+        </div>
+    </div>
+
+    <!-- Level quick filter -->
+    <div class="level-bar">
+        <div style="width:100%;margin-bottom:4px">
+            <a onclick="toggleBidFilter()" style="font-size:12px;color:#1890ff;cursor:pointer">招标项目筛选</a>
+        </div>
+        <div class="level-item level-all {% if not lead_level %}active{% endif %}" onclick="setFilter('lead_level','')">
+            <div class="lv">ALL</div><div class="cnt">{{ pagination.total }}</div>
+        </div>
+        <div class="level-item level-S {% if lead_level=='S' %}active{% endif %}" onclick="setFilter('lead_level','S')">
+            <div class="lv">S</div><div class="cnt">{{ level_counts.get('S',0) }} 高意向</div>
+        </div>
+        <div class="level-item level-A {% if lead_level=='A' %}active{% endif %}" onclick="setFilter('lead_level','A')">
+            <div class="lv">A</div><div class="cnt">{{ level_counts.get('A',0) }} 中等</div>
+        </div>
+        <div class="level-item level-B {% if lead_level=='B' %}active{% endif %}" onclick="setFilter('lead_level','B')">
+            <div class="lv">B</div><div class="cnt">{{ level_counts.get('B',0) }} 一般</div>
+        </div>
+        <div class="level-item level-C {% if lead_level=='C' %}active{% endif %}" onclick="setFilter('lead_level','C')">
+            <div class="lv">C</div><div class="cnt">{{ level_counts.get('C',0) }} 低</div>
+        </div>
+    </div>
+
+    <!-- Bid filter (visible when viewing S-level or bidding source) -->
+    <div class="panel" id="bidFilter" style="display:{% if lead_level=='S' or source=='招标平台' %}block{% else %}none{% endif %};padding:14px;margin-bottom:16px;background:#fffbe6;border:1px solid #ffe58f">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">招标项目筛选</div>
+        <form class="filter-bar" method="get" action="/leads" style="background:transparent;padding:0;margin:0">
+            <input type="hidden" name="lead_level" value="{{ lead_level }}">
+            <input type="hidden" name="source" value="{{ source or '招标平台' }}">
+            <input type="hidden" name="has_phone" value="{{ has_phone }}">
+            <input type="hidden" name="sort" value="{{ sort or 'level' }}">
+            <label>金额≥</label>
+            <input type="number" name="bid_min_budget" value="{{ bid_min_budget }}" placeholder="万元" style="width:80px;padding:5px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px">
+            <label>≤</label>
+            <input type="number" name="bid_max_budget" value="{{ bid_max_budget }}" placeholder="万元" style="width:80px;padding:5px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px">
+            <button type="submit" class="btn" style="padding:5px 14px;background:#1890ff;color:#fff;border:1px solid #1890ff;border-radius:4px;font-size:13px;cursor:pointer">筛选</button>
+            <a href="/leads?lead_level=S&has_phone={{ has_phone }}" class="btn" style="padding:5px 14px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;text-decoration:none">重置</a>
+        </form>
+    </div>
+
+    <!-- Quality bar -->
+    <div class="quality-bar">
+        <div class="q-item q-all {% if not has_phone %}active{% endif %}" onclick="setFilter('has_phone','')">全部</div>
+        <div class="q-item q-hot {% if has_phone=='yes' %}active{% endif %}" onclick="setFilter('has_phone','yes')">有效线索（有电话）</div>
+        <div class="q-item q-cold {% if has_phone=='no' %}active{% endif %}" onclick="setFilter('has_phone','no')">无电话</div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center"><span>线索列表</span>
+            <div style="display:flex;gap:8px">
+                <label style="padding:6px 16px;background:#1890ff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px">
+                    &#128228; 导入Excel
+                    <input type="file" id="importFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
+                </label>
+                <button onclick="exportExcel()" style="padding:6px 16px;background:#52c41a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px">&#128229; 导出Excel</button>
+            </div></div>
+        <form class="filter-bar" method="get" action="/leads">
+            <label>状态</label>
+            <select name="status"><option value="">全部</option>
+                <option value="new" {% if status=='new' %}selected{% endif %}>新线索</option>
+                <option value="contacted" {% if status=='contacted' %}selected{% endif %}>已联系</option>
+                <option value="interested" {% if status=='interested' %}selected{% endif %}>有意向</option>
+                <option value="quoting" {% if status=='quoting' %}selected{% endif %}>报价中</option>
+                <option value="closed_won" {% if status=='closed_won' %}selected{% endif %}>已成交</option>
+                <option value="closed_lost" {% if status=='closed_lost' %}selected{% endif %}>已流失</option>
+            </select>
+            <label>等级</label>
+            <select name="lead_level"><option value="">全部</option>
+                <option value="S" {% if lead_level=='S' %}selected{% endif %}>S 高意向</option>
+                <option value="A" {% if lead_level=='A' %}selected{% endif %}>A 中等</option>
+                <option value="B" {% if lead_level=='B' %}selected{% endif %}>B 一般</option>
+                <option value="C" {% if lead_level=='C' %}selected{% endif %}>C 低</option>
+            </select>
+            <label>来源</label>
+            <select name="source"><option value="">全部</option>
+                {% for s in all_sources %}<option value="{{ s }}" {% if source==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+            </select>
+            <label>类型</label>
+            <select name="customer_type"><option value="">全部</option>
+                {% for t in all_types %}<option value="{{ t }}" {% if customer_type==t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+            </select>
+            <label>区域</label>
+            <select name="area"><option value="">全部</option>
+                {% for a in all_areas %}<option value="{{ a }}" {% if area==a %}selected{% endif %}>{{ a }}</option>{% endfor %}
+            </select>
+            <label>电话</label>
+            <select name="has_phone"><option value="">全部</option>
+                <option value="yes" {% if has_phone=='yes' %}selected{% endif %}>有电话</option>
+                <option value="no" {% if has_phone=='no' %}selected{% endif %}>无电话</option>
+            </select>
+            <label>排序</label>
+            <select name="sort">
+                <option value="newest" {% if sort=='newest' %}selected{% endif %}>最新</option>
+                <option value="score" {% if sort=='score' %}selected{% endif %}>评分高</option>
+                <option value="level" {% if sort=='level' %}selected{% endif %}>等级优先</option>
+                <option value="phone" {% if sort=='phone' %}selected{% endif %}>有电话优先</option>
+            </select>
+            <input type="hidden" name="has_phone" value="{{ has_phone }}">
+            <input type="hidden" name="lead_level" value="{{ lead_level }}">
+            <button type="submit" class="btn">筛选</button>
+            <a href="/leads" class="btn btn-reset" style="padding:6px 16px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;text-decoration:none">重置</a>
+        </form>
+
+        <div class="table-wrap"><table>
+            <tr>
+                <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+                <th>等级</th><th>名称</th><th>电话</th>
+                <th>类型</th><th>区域</th><th>状态</th>
+                <th>总分</th><th>金额(万)</th><th>截止时间</th><th>操作</th>
+            </tr>
+            {% for lead in leads %}
+            <tr class="{% if lead.lead_level=='S' %}row-S{% endif %}" data-id="{{ lead.id }}">
+                <td><input type="checkbox" class="row-check" value="{{ lead.id }}"></td>
+                <td><span class="lv-tag lv-{{ lead.lead_level }}">{{ lead.lead_level }}</span>
+                    {% if lead.is_opt_out %}<span class="optout-tag">退订</span>{% endif %}
+                    {% if lead.sleep_status %}<span class="sleep-tag">沉睡</span>{% endif %}
+                </td>
+                <td><a href="/lead/{{ lead.id }}">{{ lead.name[:25] }}</a></td>
+                <td>{% if lead.phone %}<span class="phone-yes">{{ lead.phone }}</span>
+                    <a href="tel:{{ lead.phone }}" style="margin-left:4px;font-size:14px" title="一键拨号">&#128222;</a>
+                    <a href="javascript:void(0)" onclick="copyText('{{ lead.phone }}')" style="margin-left:2px;font-size:14px" title="复制号码">&#128203;</a>
+                {% else %}<span class="phone-no">无</span>{% endif %}</td>
+                <td>{{ lead.customer_type or '-' }}</td>
+                <td>{{ lead.area or '-' }}</td>
+                <td>
+                    <select class="inline-status" data-id="{{ lead.id }}" onchange="updateStatus(this)" style="padding:2px 4px;border:1px solid #e8e8e8;border-radius:3px;font-size:12px;background:#fff">
+                        <option value="new" {% if lead.status=='new' %}selected{% endif %}>新线索</option>
+                        <option value="contacted" {% if lead.status=='contacted' %}selected{% endif %}>已联系</option>
+                        <option value="interested" {% if lead.status=='interested' %}selected{% endif %}>有意向</option>
+                        <option value="quoting" {% if lead.status=='quoting' %}selected{% endif %}>报价中</option>
+                        <option value="closed_won" {% if lead.status=='closed_won' %}selected{% endif %}>已成交</option>
+                        <option value="closed_lost" {% if lead.status=='closed_lost' %}selected{% endif %}>已流失</option>
+                    </select>
+                </td>
+                <td><div class="score-bar"><div class="bar"><div class="bar-fill" style="width:{{ lead.total_score }}%;background:{% if lead.total_score>=70 %}#cf1322{% elif lead.total_score>=50 %}#d46b08{% elif lead.total_score>=30 %}#1890ff{% else %}#d9d9d9{% endif %}"></div></div><span>{{ lead.total_score }}</span></div></td>
+                <td>{% if lead.bid_budget %}<span style="font-weight:600;color:#cf1322">{{ '%.1f'|format(lead.bid_budget) }}</span>{% else %}-{% endif %}</td>
+                <td style="font-size:11px;{% if lead.bid_deadline %}color:#fa8c16;font-weight:600{% endif %}">{% if lead.bid_deadline %}{{ lead.bid_deadline[:16] }}{% elif lead.source=='招标平台' %}-{% endif %}</td>
+                <td style="white-space:nowrap">
+                    <a href="/lead/{{ lead.id }}" class="btn-sm">详情</a>
+                    <a href="javascript:void(0)" class="btn-sm" onclick="showScript({{ lead.id }},'{{ lead.name[:15] }}','{{ lead.business_category or '' }}','{{ lead.customer_type or '' }}')" title="跟进话术" style="color:#52c41a">&#128172;</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table></div>
+        <div class="pagination">
+            {% set qs = 'status=' ~ status ~ '&source=' ~ source ~ '&customer_type=' ~ customer_type ~ '&area=' ~ area ~ '&has_phone=' ~ has_phone ~ '&lead_level=' ~ lead_level ~ '&sort=' ~ sort %}
+            {% if pagination.has_prev %}<a href="?page={{ pagination.prev_num }}&{{ qs }}">上一页</a>{% endif %}
+            {% for p in pagination.iter_pages() %}{% if p %}<a href="?page={{ p }}&{{ qs }}" class="{% if p==pagination.page %}active{% endif %}">{{ p }}</a>{% endif %}{% endfor %}
+            {% if pagination.has_next %}<a href="?page={{ pagination.next_num }}&{{ qs }}">下一页</a>{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Batch action toolbar (hidden by default) -->
+<div id="batchBar" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#001529;color:#fff;padding:12px 24px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:200;display:none;align-items:center;gap:16px;font-size:13px">
+    <span id="batchCount">0 条已选</span>
+    <button onclick="batchAction('S')" style="padding:6px 14px;background:#cf1322;color:#fff;border:none;border-radius:4px;cursor:pointer">标记S级</button>
+    <button onclick="batchAction('A')" style="padding:6px 14px;background:#d46b08;color:#fff;border:none;border-radius:4px;cursor:pointer">标记A级</button>
+    <button onclick="batchExport()" style="padding:6px 14px;background:#52c41a;color:#fff;border:none;border-radius:4px;cursor:pointer">导出Excel</button>
+    <button onclick="clearSelection()" style="padding:6px 14px;background:#666;color:#fff;border:none;border-radius:4px;cursor:pointer">取消</button>
+</div>
+
+<!-- Follow-up script modal -->
+<div id="scriptModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:300" onclick="if(event.target==this)closeScriptModal()">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div style="font-size:16px;font-weight:600" id="scriptTitle">跟进话术</div>
+            <span onclick="closeScriptModal()" style="cursor:pointer;font-size:20px;color:#8c8c8c">&times;</span>
+        </div>
+        <div id="scriptContent" style="font-size:14px;line-height:1.8;color:#333"></div>
+        <div style="margin-top:16px;text-align:right">
+            <button onclick="copyText(document.getElementById('scriptContent').innerText)" style="padding:8px 20px;background:#1890ff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px">复制话术</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleBidFilter(){var el=document.getElementById('bidFilter');el.style.display=el.style.display==='none'?'block':'none';}
+
+let currentChartType = 'type';
+function loadChart(type, evt) {
+    currentChartType = type;
+    document.querySelectorAll('.chart-toggle button').forEach(b => b.classList.remove('active'));
+    if(evt && evt.target) evt.target.classList.add('active');
+    else document.querySelector('.chart-toggle button:nth-child('+(type==='type'?1:2)+')').classList.add('active');
+    renderChart(type);
+}
+
+function renderChart(type) {
+    const url = type === 'type' ? '/api/stats/by_type' : '/api/stats/by_area';
+    fetch(url).then(r => r.json()).then(data => {
+        const grid = document.getElementById('chartGrid');
+        grid.innerHTML = '';
+        if (!data.length) { grid.innerHTML = '<div style="color:#8c8c8c;padding:20px">No data</div>'; return; }
+        const maxVal = Math.max(...data.map(d => d.total), 1);
+        const colors = ['#1890ff','#52c41a','#fa8c16','#722ed1','#eb2f96','#13c2c2','#faad14','#2f54eb','#a0d911','#f5222d'];
+        data.slice(0, 15).forEach((d, i) => {
+            const name = d.type || d.area || '?';
+            const pct = d.total / maxVal * 100;
+            const phonePct = d.with_phone / maxVal * 100;
+            const color = colors[i % colors.length];
+            const cell = document.createElement('div');
+            cell.className = 'chart-bar';
+            cell.onclick = () => {
+                const key = type === 'type' ? 'customer_type' : 'area';
+                window.location = '/leads?' + key + '=' + encodeURIComponent(name);
+            };
+            cell.innerHTML =
+                '<div class="bar-rect" style="height:' + Math.max(pct * 1.4, 4) + 'px;background:' + color + '">' +
+                '<div class="bar-val">' + d.total + '</div></div>' +
+                '<div class="bar-label">' + name + '</div>' +
+                '<div class="bar-phone">Tel:' + d.with_phone + '</div>';
+            grid.appendChild(cell);
+        });
+    }).catch(() => {});
+}
+
+// Auto-load chart on page load
+document.addEventListener('DOMContentLoaded', function(){ renderChart('type'); });
+
+function setFilter(key,val){
+    const url=new URL(window.location);
+    if(val)url.searchParams.set(key,val);else url.searchParams.delete(key);
+    url.searchParams.delete('page');
+    window.location=url;
+}
+
+// Inline status update
+function updateStatus(sel){
+    var id=sel.dataset.id,val=sel.value;
+    fetch('/api/leads/'+id+'/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:val})})
+    .then(r=>r.json()).then(d=>{if(d && (d.ok===false || d.error))showToast(d.error||'请求失败','error');}).catch(e=>showToast('Failed: '+e,'error'));
+}
+
+// Copy to clipboard
+function copyText(text){
+    if(navigator.clipboard){navigator.clipboard.writeText(text);}
+    else{var t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}
+}
+
+// Batch selection
+function toggleSelectAll(cb){
+    document.querySelectorAll('.row-check').forEach(c=>{c.checked=cb.checked});
+    updateBatchBar();
+}
+document.addEventListener('change',function(e){
+    if(e.target.classList.contains('row-check'))updateBatchBar();
+});
+function updateBatchBar(){
+    var checked=document.querySelectorAll('.row-check:checked');
+    var bar=document.getElementById('batchBar');
+    if(checked.length>0){
+        bar.style.display='flex';
+        document.getElementById('batchCount').textContent=checked.length+' 条已选';
+    }else{bar.style.display='none';}
+}
+function clearSelection(){
+    document.querySelectorAll('.row-check').forEach(c=>c.checked=false);
+    document.getElementById('selectAll').checked=false;
+    updateBatchBar();
+}
+function getSelectedIds(){
+    return Array.from(document.querySelectorAll('.row-check:checked')).map(c=>c.value);
+}
+function batchAction(level){
+    var ids=getSelectedIds();
+    if(!ids.length)return;
+    if(!confirm('确定将 '+ids.length+' 条线索标记为 '+level+' 级？'))return;
+    Promise.all(ids.map(id=>
+        fetch('/api/leads/'+id+'/set_level',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({set_level:level})})
+        .then(r=>r.json())
+    )).then(()=>{clearSelection();location.reload();}).catch(e=>showToast('Error: '+e,'error'));
+}
+function batchExport(){
+    var ids=getSelectedIds();
+    if(!ids.length)return;
+    // Build CSV from table rows
+    var rows=['等级,名称,电话,类型,区域,状态,总分'];
+    ids.forEach(id=>{
+        var tr=document.querySelector('tr[data-id="'+id+'"]');
+        if(!tr)return;
+        var cells=tr.querySelectorAll('td');
+        var name=cells[2].textContent.trim();
+        var phone=cells[3].querySelector('.phone-yes');
+        phone=phone?phone.textContent.trim():'';
+        rows.push([
+            cells[1].querySelector('.lv-tag').textContent.trim(),
+            name, phone,
+            cells[4].textContent.trim(),
+            cells[5].textContent.trim(),
+            cells[6].querySelector('select').value,
+            cells[7].querySelector('span:last-child').textContent.trim()
+        ].join(','));
+    });
+    var blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='leads_export.csv';a.click();
+    clearSelection();
+}
+
+// Follow-up script generator
+var SCRIPTS={
+    '膜结构':{
+        '学校':'您好，我们专注膜结构车棚/看台20年，近期刚为XX学校完成了操场膜结构看台项目，不仅遮阳挡雨还能抗风抗雪。了解到贵校可能有类似需求，方便发一份案例资料给您参考吗？',
+        '工厂':'您好，我们是专业膜结构停车棚厂家，为多家工厂提供过员工停车区膜结构方案，施工快、造价低、免维护。请问贵厂目前有多少停车位需要覆盖？',
+        'default':'您好，我们是湖北地区专业膜结构车棚厂家，拥有钢结构+膜结构双资质，近期完工多个同类项目。了解到您可能有相关需求，方便简单沟通一下吗？'
+    },
+    '玻璃遮阳棚':{
+        '小区':'您好，我们专做小区地下车库出入口玻璃遮阳棚和雨棚，近期刚交付了XX小区的项目。玻璃雨棚既美观又实用，很多新楼盘都在配套。请问贵小区目前有这方面规划吗？',
+        '医院':'您好，我们为多家医院提供过连廊玻璃雨棚和门诊入口遮阳棚，材料用的是钢化夹胶玻璃，安全性和透光性都很好。请问近期有门诊楼或住院部的改造计划吗？',
+        'default':'您好，我们专业生产玻璃遮阳棚/雨棚，适用于商业、住宅、医院等各类场景，可定制各种造型。方便了解一下您的具体需求吗？'
+    },
+    '光伏车棚':{
+        '工厂':'您好，我们做的光伏车棚既能遮阳停车又能发电创收，以XX产业园为例，500个车位的光伏车棚年发电量可达XX万度。很多企业都在用这种方式降低用电成本。请问贵厂区有多少停车位？',
+        '商业':'您好，光伏车棚是目前商业综合体停车场的标配升级方案，既提升物业形象又能产生电费收益。我们刚为XX商业广场完成了5000平米的光伏车棚项目。请问有这方面的规划吗？',
+        'default':'您好，我们是湖北地区光伏车棚专业承建商，集设计、施工、并网于一体。光伏车棚一棚两用，既能遮阳停车又能发电卖电。方便了解一下您的停车区域情况吗？'
+    }
+};
+
+function showScript(id,name,category,customerType){
+    document.getElementById('scriptTitle').textContent=name+' - 跟进话术';
+    var catScripts=SCRIPTS[category]||SCRIPTS['膜结构'];
+    var script=catScripts[customerType]||catScripts['default'];
+    var html='<div style="background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;padding:16px;margin-bottom:12px">';
+    html+='<div style="font-size:12px;color:#52c41a;font-weight:600;margin-bottom:8px">&#128222; 推荐话术（'+category+'/'+customerType+'）</div>';
+    html+='<div style="font-size:14px;line-height:1.8">'+script+'</div></div>';
+    html+='<div style="background:#e6f7ff;border:1px solid #91d5ff;border-radius:8px;padding:16px">';
+    html+='<div style="font-size:12px;color:#1890ff;font-weight:600;margin-bottom:8px">&#128161; 跟进建议</div>';
+    html+='<div style="font-size:13px;line-height:1.8">';
+    if(category=='膜结构'){html+='&bull; 重点强调：施工资质、抗风抗雪能力、免维护<br>&bull; 案例素材：准备3-5个同类项目实景照片<br>&bull; 报价策略：按平米报价，含基础+膜材+安装';}
+    else if(category=='玻璃遮阳棚'){html+='&bull; 重点强调：安全性（钢化夹胶玻璃）、美观度、定制能力<br>&bull; 案例素材：准备不同造型的效果图和实景对比<br>&bull; 报价策略：按展开面积报价，含钢架+玻璃+安装';}
+    else{html+='&bull; 重点强调：发电收益、投资回报周期（通常5-7年回本）<br>&bull; 案例素材：准备发电数据和电费节省案例<br>&bull; 报价策略：按装机容量报价，可申请补贴';}
+    html+='</div></div>';
+    document.getElementById('scriptContent').innerHTML=html;
+    document.getElementById('scriptModal').style.display='block';
+}
+function closeScriptModal(){document.getElementById('scriptModal').style.display='none';}
+
+// Excel import function
+function importExcel(input) {
+    var file = input.files[0];
+    if (!file) return;
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        showToast('只支持 .xlsx/.xls 格式', 'error');
+        return;
+    }
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('source', 'import');
+    formData.append('area', '武汉');
+    showToast('正在导入...', 'info');
+    fetch('/api/import/excel', {
+        method: 'POST',
+        body: formData
+    }).then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.ok) {
+            showToast(data.data.message, 'success');
+            setTimeout(function() { location.reload(); }, 1500);
+        } else {
+            showToast(data.error || '导入失败', 'error');
+        }
+        input.value = '';
+    }).catch(function(e) {
+        showToast('导入失败: ' + e.message, 'error');
+        input.value = '';
+    });
+}
+
+// Server-side Excel export with current filters
+function exportExcel(){
+    var params=new URLSearchParams(window.location.search);
+    window.location='/api/leads/export?'+params.toString();
+}
+
+
+
+function showToast(msg,type){
+  try{
+    var box=document.getElementById('globalToastBox');
+    if(!box){box=document.createElement('div');box.id='globalToastBox';box.className='toast-box';document.body.appendChild(box)}
+    var d=document.createElement('div');d.className='toast-msg '+(type||'');
+    d.textContent=typeof msg==='string'?msg:JSON.stringify(msg);
+    box.appendChild(d);setTimeout(function(){try{d.remove()}catch(e){}},3500);
+  }catch(e){console.warn('[toast]',msg)}
+}
+if(typeof window.__apiFetchPatched === 'undefined'){
+  window.__apiFetchPatched = true;
+  window._nativeFetch = window.fetch;
+  window.fetch = function(url, opts){
+    var p = window._nativeFetch(url, opts);
+    if(typeof url === 'string' && url.indexOf('/api/') !== -1){
+      return p.then(function(r){
+        var ct = r.headers.get('content-type') || '';
+        if(ct.indexOf('application/json') !== -1){
+          return r.clone().json().then(function(j){
+            var inner = (j && Object.prototype.hasOwnProperty.call(j, 'data')) ? j.data : j;
+            if(!r.ok){
+              var errObj = (inner && typeof inner === 'object') ? inner : {ok:false, error:String(inner||('HTTP '+r.status))};
+              if(errObj.ok === undefined) errObj.ok = false;
+              if(!errObj.error) errObj.error = 'HTTP '+r.status;
+              return new Response(JSON.stringify(errObj), {status: r.status, statusText: r.statusText, headers: r.headers});
+            }
+            return new Response(JSON.stringify(inner), {status: r.status, statusText: r.statusText, headers: r.headers});
+          });
+        }
+        if(!r.ok){
+          return r.text().then(function(t){
+            return new Response(JSON.stringify({ok:false, error:t||('HTTP '+r.status)}), {status: r.status, statusText: r.statusText, headers: {'content-type':'application/json'}});
+          });
+        }
+        return r;
+      });
+    }
+    return p;
+  };
+}
+</script>
+</body>
+</html>
+
