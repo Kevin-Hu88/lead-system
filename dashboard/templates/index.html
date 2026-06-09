@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>获客管理系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#333;-webkit-text-size-adjust:100%}
+a{color:#1890ff;text-decoration:none}
+.topnav{background:#001529;color:#fff;padding:0 24px;display:flex;align-items:center;height:48px;position:sticky;top:0;z-index:100;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.topnav .logo{font-size:16px;font-weight:600;margin-right:32px;white-space:nowrap}
+.topnav a{color:rgba(255,255,255,.7);margin-right:24px;font-size:14px;white-space:nowrap;padding:12px 0}
+.topnav a:hover,.topnav a.active{color:#fff}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stat-card .label{font-size:12px;color:#8c8c8c;margin-bottom:6px}
+.stat-card .value{font-size:26px;font-weight:700}
+.stat-card .value.blue{color:#1890ff}
+.stat-card .value.green{color:#52c41a}
+.stat-card .value.orange{color:#fa8c16}
+.stat-card .value.red{color:#cf1322}
+.panel{background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.panel-title{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.panel-title .badge{background:#cf1322;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:400}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
+th{text-align:left;padding:10px 12px;background:#fafafa;color:#8c8c8c;font-weight:500;border-bottom:1px solid #f0f0f0;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid #f0f0f0}
+tr:hover{background:#f5f7fa}
+tr.row-S{background:#fff1f0}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px}
+.tag-new{background:#e6f7ff;color:#1890ff}
+.tag-contacted{background:#fff7e6;color:#fa8c16}
+.tag-interested{background:#f6ffed;color:#52c41a}
+.tag-quoting{background:#f9f0ff;color:#722ed1}
+.tag-closed_won{background:#b7eb8f;color:#135200}
+.tag-closed_lost{background:#ffa39e;color:#cf1322}
+.lv-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;min-width:28px;text-align:center}
+.lv-S{background:#cf1322;color:#fff}
+.lv-A{background:#d46b08;color:#fff}
+.lv-B{background:#1890ff;color:#fff}
+.lv-C{background:#d9d9d9;color:#666}
+.score-bar{display:inline-flex;align-items:center;gap:6px}
+.score-bar .bar{width:60px;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.score-bar .bar-fill{height:100%;border-radius:3px}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;cursor:pointer;background:#fff}
+.btn:hover{border-color:#1890ff;color:#1890ff}
+.btn-primary{background:#1890ff;color:#fff;border-color:#1890ff}
+.btn-sm{padding:3px 8px;font-size:12px}
+.msg-out{color:#1890ff}
+.msg-in{color:#52c41a}
+/* Level distribution bar */
+.level-dist{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.level-dist-item{flex:1;min-width:120px;padding:14px;border-radius:8px;text-align:center;cursor:pointer;transition:all .2s;text-decoration:none;color:inherit}
+.level-dist-item:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.level-dist-S{background:#fff1f0;border:1px solid #ffa39e}
+.level-dist-A{background:#fff7e6;border:1px solid #ffd591}
+.level-dist-B{background:#e6f7ff;border:1px solid #91d5ff}
+.level-dist-C{background:#f5f5f5;border:1px solid #e8e8e8}
+.level-dist-item .lv{font-size:24px;font-weight:700}
+.level-dist-item .cnt{font-size:20px;font-weight:600;margin-top:4px}
+.level-dist-item .lbl{font-size:11px;color:#8c8c8c;margin-top:2px}
+/* Heatmap */
+.heatmap-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.heatmap-header h3{font-size:15px;font-weight:600}
+.heatmap-legend{display:flex;gap:12px;font-size:11px;color:#8c8c8c}
+.heatmap-legend span{display:flex;align-items:center;gap:4px}
+.heatmap-legend .dot{width:12px;height:12px;border-radius:2px;flex-shrink:0}
+.heatmap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.heatmap-cell{padding:12px 10px;border-radius:6px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.heatmap-cell:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:1}
+.heatmap-cell .area-name{font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.heatmap-cell .area-count{font-size:20px;font-weight:700}
+.heatmap-cell .area-detail{font-size:10px;opacity:.8;margin-top:2px}
+.heatmap-tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:6px 10px;border-radius:4px;font-size:11px;white-space:nowrap;z-index:10}
+.heatmap-cell:hover .heatmap-tooltip{display:block}
+@media(max-width:768px){
+    .container{padding:12px}
+    .stats-row{grid-template-columns:repeat(2,1fr);gap:10px}
+    .stat-card{padding:12px}
+    .stat-card .value{font-size:20px}
+    .grid-2{grid-template-columns:1fr;gap:12px}
+    .heatmap-grid{grid-template-columns:repeat(auto-fill,minmax(85px,1fr));gap:6px}
+    .heatmap-cell{padding:10px 6px}
+    .heatmap-cell .area-count{font-size:16px}
+    .level-dist{gap:8px}
+    .level-dist-item{min-width:70px;padding:10px}
+    .level-dist-item .lv{font-size:18px}
+    .level-dist-item .cnt{font-size:16px}
+}
+
+.toast-box{position:fixed;right:16px;bottom:16px;z-index:99999;display:flex;flex-direction:column;gap:8px}
+.toast-msg{padding:10px 14px;border-radius:6px;background:#fffbe6;border:1px solid #ffe58f;color:#ad6800;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.toast-msg.error{background:#fff1f0;border:1px solid #ffa39e;color:#a8071a}
+.toast-msg.ok{background:#f6ffed;border:1px solid #b7eb8f;color:#237804}
+
+.stat-card{cursor:pointer;transition:all .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+</style>
+</head>
+<body>
+<div class="topnav">
+    <div class="logo">获客管理系统</div>
+    <a href="/" class="active">仪表盘</a>
+    <a href="/leads">线索管理</a>
+    <a href="/harvest">采集控制</a>
+</div>
+<div class="container">
+    <!-- Stats overview -->
+    <div class="stats-row">
+        <a class="stat-card stat-link" href="/leads">
+            <div class="label">线索总数</div>
+            <div class="value blue">{{ stats.total_leads }}</div>
+            <div class="stat-hint">查看全部</div>
+        </a>
+        <a class="stat-card stat-link" href="/leads?created_today=1">
+            <div class="label">今日新增</div>
+            <div class="value green">{{ stats.new_today }}</div>
+            <div class="stat-hint">今日入库</div>
+        </a>
+        <a class="stat-card stat-link" href="/leads?created_week=1">
+            <div class="label">本周线索</div>
+            <div class="value">{{ stats.week_leads }}</div>
+            <div class="stat-hint">近7天</div>
+        </a>
+        <a class="stat-card stat-link" href="/leads?sort=score&has_phone=yes">
+            <div class="label">高意向待跟进</div>
+            <div class="value orange">{{ stats.high_score_leads }}</div>
+            <div class="stat-hint">按分数排序</div>
+        </a>
+        <a class="stat-card stat-link" href="/leads?sleep_status=1">
+            <div class="label">退订/沉睡</div>
+            <div class="value red">{{ stats.get('opt_out_count',0) }}/{{ stats.get('sleep_count',0) }}</div>
+            <div class="stat-hint">需关注</div>
+        </a>
+    </div>
+
+    <!-- Level distribution -->
+    <div class="level-dist">
+        <a class="level-dist-item level-dist-S" href="/leads?lead_level=S">
+            <div class="lv">S 高意向</div>
+            <div class="cnt">{{ s_count }}</div>
+            <div class="lbl">需人工24h跟进</div>
+        </a>
+        <a class="level-dist-item level-dist-A" href="/leads?lead_level=A">
+            <div class="lv">A 中等</div>
+            <div class="cnt">{{ a_count }}</div>
+            <div class="lbl">自动短信+企微</div>
+        </a>
+        <a class="level-dist-item level-dist-B" href="/leads?lead_level=B">
+            <div class="lv">B 一般</div>
+            <div class="cnt">{{ stats.get('level_counts',{}).get('B',0) }}</div>
+            <div class="lbl">批量短信覆盖</div>
+        </a>
+        <a class="level-dist-item level-dist-C" href="/leads?lead_level=C">
+            <div class="lv">C 低意向</div>
+            <div class="cnt">{{ stats.get('level_counts',{}).get('C',0) }}</div>
+            <div class="lbl">低优先级</div>
+        </a>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="panel">
+        <div class="heatmap-header">
+            <h3>线索热力地图</h3>
+            <div class="heatmap-legend">
+                <span><div class="dot" style="background:#e6f7ff"></div>少</span>
+                <span><div class="dot" style="background:#69c0ff"></div>中</span>
+                <span><div class="dot" style="background:#1890ff"></div>较多</span>
+                <span><div class="dot" style="background:#0050b3"></div>密集</span>
+            </div>
+        </div>
+        <div class="heatmap-grid" id="heatmapGrid"><div style="color:#8c8c8c;padding:20px;text-align:center">Loading...</div></div>
+    </div>
+
+    <!-- Status distribution -->
+    <div class="panel">
+        <div class="panel-title">线索状态分布</div>
+        <div class="stats-row">
+            {% for label, count in stats.status_counts.items() %}
+            <div class="stat-card"><div class="label">{{ label }}</div><div class="value">{{ count }}</div></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="panel" style="border-top:3px solid #cf1322">
+            <div class="panel-title">S级待办任务{% if handoff_leads %}<span class="badge">{{ handoff_leads|length }}</span>{% endif %}</div>
+            {% if handoff_leads %}
+            <div style="display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto">
+                {% for lead in handoff_leads[:8] %}
+                <div style="border:1px solid #fff1f0;border-radius:8px;padding:12px;transition:all .2s;cursor:pointer" onmouseover="this.style.boxShadow='0 4px 12px rgba(207,19,34,.15)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                        <div style="flex:1;min-width:0">
+                            <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                <span class="lv-tag lv-S" style="font-size:10px;padding:1px 6px">S</span>
+                                <a href="/lead/{{ lead.id }}">{{ lead.name[:20] }}</a>
+                            </div>
+                            <div style="margin-top:4px;font-size:12px;color:#8c8c8c">
+                                {% if lead.business_category %}<span style="color:#722ed1">{{ lead.business_category }}</span> &middot; {% endif %}
+                                {% if lead.customer_type %}{{ lead.customer_type }} &middot; {% endif %}
+                                {{ lead.area or '未知区域' }}
+                            </div>
+                            <div style="margin-top:4px;font-size:12px;color:#666">
+                                {% if lead.source == '招标平台' %}&#128202; 招标项目{% if lead.bid_budget %} | 预算 <b style="color:#cf1322">{{ '%.0f'|format(lead.bid_budget) }}万</b>{% endif %}{% if lead.bid_deadline %} | 截止 <b style="color:#fa8c16">{{ lead.bid_deadline[:10] }}</b>{% endif %}
+                                {% elif lead.source == '在建工程' %}&#127959; 在建项目{% if lead.demand_desc %} | {{ lead.demand_desc[:30] }}{% endif %}
+                                {% else %}&#128222; {{ lead.source }}{% endif %}
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+                            {% if lead.phone %}
+                            <a href="tel:{{ lead.phone }}" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:#cf1322;color:#fff;border-radius:4px;font-size:12px;text-decoration:none;white-space:nowrap">&#128222; {{ lead.phone[:7] }}...</a>
+                            {% else %}
+                            <span style="padding:6px 12px;background:#f5f5f5;color:#ccc;border-radius:4px;font-size:12px;white-space:nowrap">无电话</span>
+                            {% endif %}
+                            <a href="/lead/{{ lead.id }}" style="display:inline-flex;align-items:center;justify-content:center;padding:6px 12px;background:#fff;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;text-decoration:none;white-space:nowrap">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if handoff_leads|length > 8 %}
+            <div style="text-align:center;margin-top:10px"><a href="/leads?lead_level=S" style="font-size:13px;color:#1890ff">查看全部 {{ handoff_leads|length }} 条S级线索 &rarr;</a></div>
+            {% endif %}
+            {% else %}
+            <div style="text-align:center;padding:40px 0;color:#8c8c8c">
+                <div style="font-size:32px;margin-bottom:8px">&#127881;</div>
+                <div>暂无S级线索待跟进</div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="panel">
+            <div class="panel-title">最新线索</div>
+            <div class="table-wrap"><table>
+                <tr><th>名称</th><th>等级</th><th>来源</th><th>状态</th><th>时间</th></tr>
+                {% for lead in recent_leads[:10] %}
+                <tr>
+                    <td><a href="/lead/{{ lead.id }}">{{ lead.name[:15] }}</a></td>
+                    <td><span class="lv-tag lv-{{ lead.lead_level }}">{{ lead.lead_level }}</span></td>
+                    <td>{{ lead.source }}</td>
+                    <td><span class="tag tag-{{ lead.status }}">{{ lead.status_label }}</span></td>
+                    <td>{{ lead.created_at.strftime('%m-%d %H:%M') if lead.created_at else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </table></div>
+        </div>
+    </div>
+
+    <!-- Competitor Analysis -->
+    <div class="panel" style="border-top:3px solid #722ed1">
+        <div class="panel-title">区域竞争分析 <span style="font-size:12px;color:#8c8c8c;font-weight:400">- 选择竞争小的区域集中突破</span>
+            <span style="font-size:11px;color:#8c8c8c;font-weight:400">每月自动更新</span>
+        </div>
+        <div id="competitorGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+            <div style="color:#8c8c8c;padding:20px;text-align:center">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Outreach Feedback -->
+    <div class="panel" style="border-top:3px solid #13c2c2">
+        <div class="panel-title">触达反馈追踪</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div>
+                <div style="font-size:13px;font-weight:600;color:#8c8c8c;margin-bottom:12px">触达统计（按渠道）</div>
+                <div id="outreachStats" style="display:flex;flex-direction:column;gap:8px">
+                    <div style="color:#8c8c8c;padding:10px">Loading...</div>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:600;color:#8c8c8c;margin-bottom:12px">
+                    客户回复
+                    <span id="replyCount" style="background:#52c41a;color:#fff;font-size:11px;padding:1px 6px;border-radius:8px;margin-left:4px">0</span>
+                </div>
+                <div id="replyList" style="max-height:200px;overflow-y:auto">
+                    <div style="color:#8c8c8c;padding:10px">Loading...</div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:12px">
+            <div style="font-size:13px;font-weight:600;color:#8c8c8c;margin-bottom:8px">最近触达记录</div>
+            <div id="recentOutreach" style="max-height:180px;overflow-y:auto">
+                <div style="color:#8c8c8c;padding:10px">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+        <div class="panel">
+        <div class="panel-title">最近触达记录</div>
+        <div class="table-wrap"><table>
+            <tr><th>线索</th><th>渠道</th><th>方向</th><th>内容</th><th>状态</th><th>时间</th></tr>
+            {% for msg in recent_messages[:15] %}
+            <tr>
+                <td><a href="/lead/{{ msg.lead_id }}">#{{ msg.lead_id }}</a></td>
+                <td>{{ msg.channel }}</td>
+                <td class="{% if msg.direction=='out' %}msg-out{% else %}msg-in{% endif %}">{% if msg.direction=='out' %}发出{% else %}收到{% endif %}</td>
+                <td>{{ msg.content[:40] }}{% if msg.content|length>40 %}...{% endif %}</td>
+                <td>{{ msg.status }}</td>
+                <td>{{ msg.created_at.strftime('%m-%d %H:%M') if msg.created_at else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </table></div>
+    </div>
+</div>
+<script>
+function getHeatColor(c){if(c>=200)return{bg:'#0050b3',fg:'#fff'};if(c>=80)return{bg:'#1890ff',fg:'#fff'};if(c>=20)return{bg:'#69c0ff',fg:'#fff'};return{bg:'#e6f7ff',fg:'#333'}}
+fetch('/api/heatmap').then(r=>r.json()).then(_raw=>{var data=(_raw&&_raw.data!==undefined)?_raw.data:_raw;
+    const grid=document.getElementById('heatmapGrid');
+    if(!data.length){grid.innerHTML='<div style="color:#8c8c8c;padding:20px">No data</div>';return}
+    grid.innerHTML='';
+    data.sort((a,b)=>b.total-a.total);
+    data.forEach(d=>{
+        const c=getHeatColor(d.total);
+        const cell=document.createElement('div');
+        cell.className='heatmap-cell';cell.style.background=c.bg;cell.style.color=c.fg;
+        cell.innerHTML='<div class="area-name">'+d.area+'</div>'
+            +'<div class="area-count">'+d.total+'</div>'
+            +'<div class="area-detail">Tel:'+d.with_phone+' S:'+d.s_count+' A:'+d.a_count+'</div>'
+            +'<div class="heatmap-tooltip">'+d.area+': '+d.total+' leads, '+d.with_phone+' phone, S:'+d.s_count+' A:'+d.a_count+'</div>';
+        cell.onclick=function(){window.location='/leads?area='+encodeURIComponent(d.area)};
+        grid.appendChild(cell);
+    });
+}).catch(()=>{});
+
+// Load competitor analysis
+fetch('/api/competitors').then(r=>r.json()).then(_raw=>{var data=(_raw&&_raw.data!==undefined)?_raw.data:_raw;
+    var grid=document.getElementById('competitorGrid');
+    var regions=data.regions||[];
+    if(!regions.length){grid.innerHTML='<div style="color:#8c8c8c;padding:20px">暂无竞品数据，编辑 config/competitors.py 添加</div>';return}
+    var oppColors={high:{bg:'#f6ffed',border:'#b7eb8f',text:'#52c41a',label:'机会大'},medium:{bg:'#fffbe6',border:'#ffe58f',text:'#faad14',label:'中等'},low:{bg:'#fff1f0',border:'#ffa39e',text:'#cf1322',label:'竞争激烈'}};
+    var html='';
+    regions.forEach(function(r){
+        var c=oppColors[r.opportunity]||oppColors.medium;
+        var compDetail='';
+        if(r.competitors.length>0){
+            r.competitors.slice(0,3).forEach(function(cp){
+                compDetail+='<div style="font-size:11px;color:#666;margin-top:2px">&bull; '+cp.name+' <span style="color:#8c8c8c">['+cp.strength+'级]</span></div>';
+            });
+            if(r.competitors.length>3)compDetail+='<div style="font-size:11px;color:#8c8c8c">...等'+r.competitors.length+'家</div>';
+        }else{
+            compDetail='<div style="font-size:11px;color:#52c41a;margin-top:2px">&#10003; 暂无已知竞品</div>';
+        }
+        html+='<div style="border:1px solid '+c.border+';border-radius:8px;padding:14px;background:'+c.bg+'">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+        html+='<span style="font-size:14px;font-weight:600">'+r.area+'</span>';
+        html+='<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:'+c.text+';color:#fff">'+c.label+'</span>';
+        html+='</div>';
+        html+='<div style="display:flex;gap:16px;font-size:12px;margin-bottom:6px">';
+        html+='<span>我方线索: <b>'+r.our_leads+'</b></span>';
+        html+='<span>竞品: <b>'+r.competitor_count+'</b>家</span>';
+        html+='<span style="color:#cf1322">强敌: <b>'+r.strong_competitors+'</b></span>';
+        html+='</div>';
+        html+=compDetail;
+        if(r.competitors.length>0){
+            html+='<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">';
+            r.competitors.slice(0,3).forEach(function(cp){
+                var qccUrl=cp.qcc_url||('https://www.qcc.com/search?key='+encodeURIComponent(cp.name));
+                html+='<a href="'+qccUrl+'" target="_blank" style="font-size:10px;color:#722ed1;padding:2px 6px;border:1px solid #d3adf7;border-radius:3px;text-decoration:none" title="在企查查查看">企查查</a>';
+            });
+            html+='</div>';
+        }
+        html+='</div>';
+    });
+    grid.innerHTML=html;
+}).catch(function(){document.getElementById('competitorGrid').innerHTML='<div style="color:#8c8c8c;padding:20px">加载失败</div>'});
+
+
+
+// Load outreach feedback
+fetch('/api/outreach/feedback').then(r=>r.json()).then(function(_raw){var data=(_raw&&_raw.data!==undefined)?_raw.data:_raw;
+    // Stats by channel
+    var stats=document.getElementById('outreachStats');
+    var channels=data.by_channel||{};
+    var chNames={sms:'短信',email:'邮件',wechat:'微信',system:'系统提醒',manual:'人工'};
+    var chIcons={sms:'&#128241;',email:'&#9993;',wechat:'&#128172;',system:'&#128276;',manual:'&#128222;'};
+    var statsHtml='';
+    var hasData=false;
+    for(var ch in channels){
+        hasData=true;
+        var d=channels[ch];
+        statsHtml+='<div style="display:flex;align-items:center;gap:8px;padding:8px;background:#fafafa;border-radius:6px">';
+        statsHtml+='<span style="font-size:18px">'+(chIcons[ch]||'&#128241;')+'</span>';
+        statsHtml+='<div style="flex:1"><div style="font-size:13px;font-weight:600">'+(chNames[ch]||ch)+'</div>';
+        statsHtml+='<div style="font-size:11px;color:#8c8c8c">发送 '+d.sent+' | 失败 '+(d.failed||0)+' | 提醒 '+(d.alert||0)+'</div></div>';
+        statsHtml+='<div style="font-size:18px;font-weight:700;color:#1890ff">'+d.total+'</div>';
+        statsHtml+='</div>';
+    }
+    if(!hasData)statsHtml='<div style="color:#8c8c8c;padding:10px">暂无触达记录</div>';
+    stats.innerHTML=statsHtml;
+
+    // Replies
+    var replies=data.replies||[];
+    document.getElementById('replyCount').textContent=replies.length;
+    var replyHtml='';
+    if(replies.length===0){
+        replyHtml='<div style="color:#8c8c8c;padding:10px;text-align:center">暂无客户回复<br><span style="font-size:11px">自动发送的短信/微信回复会显示在这里</span></div>';
+    }else{
+        replies.forEach(function(r){
+            replyHtml+='<div style="padding:8px;border-bottom:1px solid #f0f0f0">';
+            replyHtml+='<div style="display:flex;justify-content:space-between"><span style="font-weight:600;font-size:13px">'+r.lead_name+'</span><span style="font-size:11px;color:#8c8c8c">'+r.created_at+'</span></div>';
+            replyHtml+='<div style="font-size:12px;color:#52c41a;margin-top:2px">'+r.content+'</div>';
+            replyHtml+='</div>';
+        });
+    }
+    document.getElementById('replyList').innerHTML=replyHtml;
+
+    // Recent outreach
+    var recent=data.recent||[];
+    var recentHtml='';
+    if(recent.length===0){
+        recentHtml='<div style="color:#8c8c8c;padding:10px">暂无触达记录</div>';
+    }else{
+        recentHtml='<table style="width:100%;font-size:12px;border-collapse:collapse">';
+        recentHtml+='<tr style="background:#fafafa"><th style="padding:6px 8px;text-align:left">客户</th><th style="padding:6px 8px;text-align:left">渠道</th><th style="padding:6px 8px;text-align:left">方向</th><th style="padding:6px 8px;text-align:left">内容</th><th style="padding:6px 8px;text-align:left">状态</th><th style="padding:6px 8px;text-align:left">时间</th></tr>';
+        recent.forEach(function(r){
+            var dirColor=r.direction==='out'?'#1890ff':'#52c41a';
+            var dirText=r.direction==='out'?'发出':'收到';
+            recentHtml+='<tr><td style="padding:6px 8px"><a href="/lead/'+r.lead_id+'">'+r.lead_name+'</a></td>';
+            recentHtml+='<td style="padding:6px 8px">'+(chNames[r.channel]||r.channel)+'</td>';
+            recentHtml+='<td style="padding:6px 8px;color:'+dirColor+'">'+dirText+'</td>';
+            recentHtml+='<td style="padding:6px 8px">'+r.content+'</td>';
+            recentHtml+='<td style="padding:6px 8px">'+r.status+'</td>';
+            recentHtml+='<td style="padding:6px 8px;color:#8c8c8c">'+r.created_at+'</td></tr>';
+        });
+        recentHtml+='</table>';
+    }
+    document.getElementById('recentOutreach').innerHTML=recentHtml;
+}).catch(function(){});
+
+
+
+function showToast(msg,type){
+  try{
+    var box=document.getElementById('globalToastBox');
+    if(!box){box=document.createElement('div');box.id='globalToastBox';box.className='toast-box';document.body.appendChild(box)}
+    var d=document.createElement('div');d.className='toast-msg '+(type||'');
+    d.textContent=typeof msg==='string'?msg:JSON.stringify(msg);
+    box.appendChild(d);setTimeout(function(){try{d.remove()}catch(e){}},3500);
+  }catch(e){console.warn('[toast]',msg)}
+}
+if(typeof window.__apiFetchPatched === 'undefined'){
+  window.__apiFetchPatched = true;
+  window._nativeFetch = window.fetch;
+  window.fetch = function(url, opts){
+    var p = window._nativeFetch(url, opts);
+    if(typeof url === 'string' && url.indexOf('/api/') !== -1){
+      return p.then(function(r){
+        var ct = r.headers.get('content-type') || '';
+        if(ct.indexOf('application/json') !== -1){
+          return r.clone().json().then(function(j){
+            var inner = (j && Object.prototype.hasOwnProperty.call(j, 'data')) ? j.data : j;
+            if(!r.ok){
+              var errObj = (inner && typeof inner === 'object') ? inner : {ok:false, error:String(inner||('HTTP '+r.status))};
+              if(errObj.ok === undefined) errObj.ok = false;
+              if(!errObj.error) errObj.error = 'HTTP '+r.status;
+              return new Response(JSON.stringify(errObj), {status: r.status, statusText: r.statusText, headers: r.headers});
+            }
+            return new Response(JSON.stringify(inner), {status: r.status, statusText: r.statusText, headers: r.headers});
+          });
+        }
+        if(!r.ok){
+          return r.text().then(function(t){
+            return new Response(JSON.stringify({ok:false, error:t||('HTTP '+r.status)}), {status: r.status, statusText: r.statusText, headers: {'content-type':'application/json'}});
+          });
+        }
+        return r;
+      });
+    }
+    return p;
+  };
+}
+</script>
+</body>
+</html>
