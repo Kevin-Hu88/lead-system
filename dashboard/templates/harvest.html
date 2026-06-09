@@ -1,0 +1,641 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>采集控制 - 获客系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#333;-webkit-text-size-adjust:100%}
+.topnav{background:#001529;color:#fff;padding:0 24px;display:flex;align-items:center;height:48px;position:sticky;top:0;z-index:100;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.topnav .logo{font-size:16px;font-weight:600;margin-right:32px;white-space:nowrap}
+.topnav a{color:rgba(255,255,255,.7);margin-right:24px;font-size:14px;white-space:nowrap;padding:12px 0}
+.topnav a:hover,.topnav a.active{color:#fff}
+.container{max-width:1280px;margin:0 auto;padding:20px}
+.panel{background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.panel-title{font-size:15px;font-weight:600;margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:8px 16px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;cursor:pointer;background:#fff;transition:all .2s}
+.btn:hover{border-color:#1890ff;color:#1890ff}
+.btn-primary{background:#1890ff;color:#fff;border-color:#1890ff}
+.btn-primary:hover{background:#40a9ff}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.section-label{font-size:13px;font-weight:600;color:#8c8c8c;margin:16px 0 8px}
+.section-label:first-child{margin-top:0}
+.check-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.check-item{display:flex;align-items:center;gap:4px;padding:6px 12px;border:1px solid #e8e8e8;border-radius:4px;cursor:pointer;font-size:13px;transition:all .15s;user-select:none}
+.check-item:hover{border-color:#1890ff}
+.check-item.selected{background:#e6f7ff;border-color:#1890ff;color:#1890ff}
+.check-item input{display:none}
+.select-actions{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.select-actions a{font-size:12px;color:#1890ff;cursor:pointer;padding:4px 8px}
+.progress-area{margin-top:20px;padding:16px;background:#fafafa;border-radius:6px;display:none}
+.progress-bar{width:100%;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin:8px 0}
+.progress-bar .fill{height:100%;background:#1890ff;border-radius:4px;transition:width .3s}
+.log-area{max-height:300px;overflow-y:auto;font-size:12px;font-family:Consolas,monospace;background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:4px;margin-top:8px;white-space:pre-wrap}
+.summary-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}
+.summary-card{background:#f6ffed;border:1px solid #b7eb8f;border-radius:6px;padding:12px;text-align:center}
+.summary-card .num{font-size:24px;font-weight:700;color:#52c41a}
+.summary-card .lbl{font-size:12px;color:#8c8c8c;margin-top:4px}
+.harvester-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.h-card{padding:14px;border-radius:8px;border:1px solid #e8e8e8}
+.h-card .h-name{font-size:14px;font-weight:600;margin-bottom:4px}
+.h-card .h-level{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-bottom:4px}
+.h-card .h-desc{font-size:12px;color:#8c8c8c}
+.lv-S{background:#cf1322;color:#fff}
+.lv-A{background:#d46b08;color:#fff}
+.lv-B{background:#1890ff;color:#fff}
+.tab-bar{display:flex;border-bottom:2px solid #f0f0f0;margin-bottom:20px;gap:0}
+.tab-btn{padding:10px 24px;font-size:14px;font-weight:600;color:#8c8c8c;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-btn:hover{color:#1890ff}
+.tab-btn.active{color:#1890ff;border-bottom-color:#1890ff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.proj-card{padding:14px;border-radius:8px;border:1px solid #e8e8e8;border-left:3px solid #52c41a;margin-bottom:12px}
+.proj-card .proj-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.proj-card .proj-name{font-size:14px;font-weight:600}
+.proj-card .proj-desc{font-size:12px;color:#8c8c8c;margin-bottom:8px}
+.proj-card .proj-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.proj-card select{padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px}
+
+/* Bar chart */
+.chart-container{margin-top:12px}
+.chart-row{display:flex;align-items:center;margin-bottom:10px;gap:8px}
+.chart-label{width:80px;font-size:13px;text-align:right;color:#595959;flex-shrink:0}
+.chart-bar-wrap{flex:1;height:28px;background:#f5f5f5;border-radius:4px;overflow:hidden;position:relative}
+.chart-bar{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding-left:8px}
+.chart-bar span{font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
+.chart-val{width:60px;font-size:13px;text-align:left;color:#595959;flex-shrink:0}
+.chart-legend{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+.chart-legend-item{display:flex;align-items:center;gap:4px;font-size:12px;color:#8c8c8c}
+.chart-legend-dot{width:10px;height:10px;border-radius:2px}
+.chart-sub{font-size:11px;color:#8c8c8c;margin-left:4px}
+@media(max-width:768px){
+    .container{padding:12px}
+    .summary-cards{grid-template-columns:repeat(2,1fr)}
+    .harvester-info{grid-template-columns:1fr}
+    .check-grid{gap:6px}
+    .check-item{padding:8px 12px;font-size:13px;min-height:40px}
+}
+
+.toast-box{position:fixed;right:16px;bottom:16px;z-index:99999;display:flex;flex-direction:column;gap:8px}
+.toast-msg{padding:10px 14px;border-radius:6px;background:#fffbe6;border:1px solid #ffe58f;color:#ad6800;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.toast-msg.error{background:#fff1f0;border:1px solid #ffa39e;color:#a8071a}
+.toast-msg.ok{background:#f6ffed;border:1px solid #b7eb8f;color:#237804}
+</style>
+</head>
+<body>
+<div class="topnav">
+    <div class="logo">获客管理系统</div>
+    <a href="/">仪表盘</a>
+    <a href="/leads">线索管理</a>
+    <a href="/harvest" class="active">采集控制</a>
+</div>
+<div class="container">
+    <!-- Harvester overview -->
+    <div class="panel">
+        <div class="panel-title">采集渠道一览</div>
+        <div class="harvester-info">
+            <div class="h-card">
+                <div class="h-name">百度地图POI</div>
+                <div class="h-level lv-A">A级</div>
+                <div class="h-desc">按区域搜索目标场所（小区/工厂/4S店等），获取地址+电话</div>
+            </div>
+            <div class="h-card">
+                <div class="h-name">招标平台</div>
+                <div class="h-level lv-S">S级</div>
+                <div class="h-desc">抓取政府采购/公共资源交易网的车棚/遮阳棚招标公告</div>
+            </div>
+            <div class="h-card">
+                <div class="h-name">搜索引擎</div>
+                <div class="h-level lv-B">B级</div>
+                <div class="h-desc">Bing搜索车棚厂家/报价等关键词，抓取企业信息</div>
+            </div>
+            <div class="h-card">
+                <div class="h-name">58同城 + 百姓网</div>
+                <div class="h-level lv-B">B级</div>
+                <div class="h-desc">分类信息平台搜索车棚/遮阳棚相关需求</div>
+            </div>
+            <div class="h-card">
+                <div class="h-name">在建工程/新建项目</div>
+                <div class="h-level lv-S">S级</div>
+                <div class="h-desc">新建小区交付、老旧小区改造、充电桩新建、学校/医院新建工程等确认有需求的项目</div>
+            </div>
+            <div class="h-card">
+                <div class="h-name">问答平台</div>
+                <div class="h-level lv-B">B级</div>
+                <div class="h-desc">百度贴吧/知乎/百度知道中咨询车棚安装的用户</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channel stats bar chart -->
+    <div class="panel">
+        <div class="panel-title">采集渠道数据统计</div>
+        <div class="chart-legend">
+            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#1890ff"></div>总线索</div>
+            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#52c41a"></div>有电话</div>
+            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#ff4d4f"></div>S级</div>
+            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#fa8c16"></div>A级</div>
+        </div>
+        <div id="channelChart" class="chart-container"><div style="color:#8c8c8c;font-size:13px">加载中...</div></div>
+        <div style="margin-top:16px">
+            <div style="font-size:13px;font-weight:600;color:#8c8c8c;margin-bottom:8px">主营业务分类</div>
+            <div id="categoryChart" class="chart-container"><div style="color:#8c8c8c;font-size:13px">加载中...</div></div>
+        </div>
+    </div>
+
+    <!-- Dedup rules & data coverage -->
+    <div class="panel" id="coveragePanel">
+        <div class="panel-title">已有数据概览 &amp; 去重规则</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div>
+                <div style="font-size:13px;font-weight:600;color:#8c8c8c;margin-bottom:8px">去重规则（自动跳过）</div>
+                <div style="font-size:13px;line-height:2">
+                    <div><span style="display:inline-block;width:8px;height:8px;background:#ff4d4f;border-radius:50%;margin-right:6px"></span><b>电话去重</b> - 同一电话号码的线索不会重复采集</div>
+                    <div><span style="display:inline-block;width:8px;height:8px;background:#faad14;border-radius:50%;margin-right:6px"></span><b>名称去重</b> - 同一企业/场所名称不会重复采集</div>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:600;color:#8c8c8c;margin-bottom:8px">数据总量</div>
+                <div style="display:flex;gap:24px">
+                    <div><span id="covTotal" style="font-size:28px;font-weight:700;color:#1890ff">-</span><br><span style="font-size:12px;color:#8c8c8c">总线索</span></div>
+                    <div><span id="covPhone" style="font-size:28px;font-weight:700;color:#52c41a">-</span><br><span style="font-size:12px;color:#8c8c8c">有电话</span></div>
+                    <div><span id="covAreas" style="font-size:28px;font-weight:700;color:#722ed1">-</span><br><span style="font-size:12px;color:#8c8c8c">已覆盖区域</span></div>
+                </div>
+            </div>
+        </div>
+        <details>
+            <summary style="cursor:pointer;font-size:13px;color:#1890ff;font-weight:600">展开查看各区域/客户类型已有数据</summary>
+            <div id="coverageTable" style="margin-top:12px;max-height:300px;overflow-y:auto"></div>
+        </details>
+    </div>
+
+
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="regular" onclick="switchTab('regular')">常规采集</button>
+        <button class="tab-btn" data-tab="project" onclick="switchTab('project')">项目信息采集</button>
+    </div>
+
+    <!-- Tab: Project -->
+    <div class="tab-panel" id="tab-project">
+    <div class="panel">
+        <div class="panel-title">项目信息采集 - 建筑工程 &amp; 政府项目</div>
+        <div class="harvester-info">
+            <div class="h-card" style="border-left:3px solid #52c41a">
+                <div class="h-name">湖北省建筑市场监督平台</div>
+                <div class="h-level lv-S">S级</div>
+                <div class="h-desc">全省59000+建筑工程项目，按关键词筛选学校/小区/医院/商业等相关项目</div>
+                <div style="margin-top:8px">
+                    <span style="font-size:12px;color:#8c8c8c">采集范围:</span>
+                    <select id="hbcicAreaFilter" style="padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;margin-left:4px">
+                        <option value="wuhan">仅武汉</option>
+                        <option value="hubei">湖北全省</option>
+                    </select>
+                    <span style="font-size:12px;color:#8c8c8c;margin-left:8px">扫描页数:</span>
+                    <select id="hbcicMaxPages" style="padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;margin-left:4px">
+                        <option value="50">50页 (~1000项目)</option>
+                        <option value="100">100页 (~2000项目)</option>
+                        <option value="200" selected>200页 (~4000项目)</option>
+                        <option value="500">500页 (~10000项目)</option>
+                    </select>
+                </div>
+                <div style="margin-top:8px">
+                    <button class="btn btn-primary" onclick="startProjectHarvest('hbcic')" id="btnHbcic">开始采集建筑工程</button>
+                </div>
+
+            <div class="h-card" style="border-left:3px solid #722ed1">
+                <div class="h-name">住建局公告 + 政府项目公示</div>
+                <div class="h-level lv-A">A级</div>
+                <div class="h-desc">武汉/鄂州/孝感/黄冈住建局公告，CCGP政府采购项目公示</div>
+                <div style="margin-top:8px">
+                    <button class="btn" onclick="startProjectHarvest('housing_bureau')" id="btnHbureau">采集住建局公告</button>
+                    <button class="btn" onclick="startProjectHarvest('project')" id="btnProject">采集政府项目</button>
+                </div>
+            </div>
+            </div>
+            
+
+        </div>
+    </div>
+
+
+    </div>
+
+    <!-- Tab: Regular -->
+    <div class="tab-panel active" id="tab-regular">
+    <div class="panel">
+        <div class="panel-title">采集控制面板 - 自由选择目标区域 × 目标客户</div>
+
+        <div class="section-label">选择主营业务分类</div>
+        <div class="check-grid" id="categoryGrid">
+            <div class="check-item selected" data-group="category" data-value="膜结构"><input type="checkbox" checked> 膜结构车棚</div>
+            <div class="check-item selected" data-group="category" data-value="玻璃遮阳棚"><input type="checkbox" checked> 玻璃遮阳棚</div>
+            <div class="check-item selected" data-group="category" data-value="光伏车棚"><input type="checkbox" checked> 光伏车棚</div>
+        </div>
+        <div class="section-label">选择采集渠道</div>
+        <div class="check-grid" id="channelGrid">
+            <div class="check-item selected" data-group="channel" data-value="map"><input type="checkbox" checked> 百度地图 (A)</div>
+            <div class="check-item selected" data-group="channel" data-value="bid"><input type="checkbox" checked> 招标平台 (S)</div>
+            <div class="check-item selected" data-group="channel" data-value="search"><input type="checkbox" checked> 搜索引擎 (B)</div>
+            <div class="check-item selected" data-group="channel" data-value="classified"><input type="checkbox" checked> 58/百姓网 (B)</div>
+            <div class="check-item selected" data-group="channel" data-value="construction"><input type="checkbox" checked> 在建工程 (S)</div>
+            <div class="check-item selected" data-group="channel" data-value="forum"><input type="checkbox" checked> 问答平台 (B)</div>
+        </div>
+
+        <div class="section-label">选择目标区域</div>
+        <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px">
+            <div style="flex:1;min-width:280px">
+                <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+                    <button class="btn" onclick="selectPreset('wuhan')" style="font-size:12px;padding:4px 10px">仅武汉</button>
+                    <button class="btn" onclick="selectPreset('hubei')" style="font-size:12px;padding:4px 10px">湖北全省</button>
+                    <button class="btn" onclick="selectPreset('nearby')" style="font-size:12px;padding:4px 10px">武汉+周边</button>
+                    <button class="btn" onclick="selectPreset('all')" style="font-size:12px;padding:4px 10px">全选</button>
+                    <button class="btn" onclick="selectPreset('none')" style="font-size:12px;padding:4px 10px">全不选</button>
+                </div>
+                <div id="areaCascader" style="border:1px solid #d9d9d9;border-radius:6px;max-height:260px;overflow-y:auto;padding:8px;background:#fff"></div>
+            </div>
+            <div style="min-width:160px;padding:8px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:6px;font-size:12px">
+                <div style="font-weight:600;color:#52c41a;margin-bottom:4px">已选区域</div>
+                <div id="selectedAreasCount" style="font-size:20px;font-weight:700;color:#52c41a">0</div>
+                <div id="selectedAreasList" style="margin-top:4px;color:#8c8c8c;line-height:1.6;max-height:200px;overflow-y:auto"></div>
+            </div>
+        </div>
+
+        <div class="section-label">选择目标客户类型（场景）</div>
+        <div class="select-actions">
+            <a onclick="toggleAll('target',true)">全选</a>
+            <a onclick="toggleAll('target',false)">全不选</a>
+            <a onclick="selectHighValue()">高价值客户</a>
+        </div>
+        <div class="check-grid" id="targetGrid"></div>
+
+        <div style="margin-top:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="startBtn" onclick="startHarvest()">开始采集</button>
+            <span id="comboInfo" style="font-size:13px;color:#8c8c8c"></span>
+        </div>
+
+    </div>
+
+
+    </div> <!-- close tab-regular -->
+
+        <div class="progress-area" id="progressArea">
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span id="progressText">准备中...</span>
+                <span id="progressPct">0%</span>
+            </div>
+            <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+
+            <div class="summary-cards" id="summaryCards" style="display:none">
+                <div class="summary-card"><div class="num" id="sAdded">0</div><div class="lbl">新增线索</div></div>
+                <div class="summary-card"><div class="num" id="sPhone">0</div><div class="lbl">有电话</div></div>
+                <div class="summary-card"><div class="num" id="sSkipped">0</div><div class="lbl">去重跳过</div></div>
+                <div class="summary-card"><div class="num" id="sCalls">0</div><div class="lbl">API调用</div></div>
+                <div class="summary-card" style="background:#fff2f0;border-color:#ffccc7"><div class="num" id="sSkipPhone">0</div><div class="lbl">电话重复跳过</div></div>
+                <div class="summary-card" style="background:#fffbe6;border-color:#ffe58f"><div class="num" id="sSkipName">0</div><div class="lbl">名称重复跳过</div></div>
+            </div>
+            <div class="log-area" id="logArea"></div>
+        </div>
+</div>
+<script>
+const AREAS=[
+    {group:"武汉各区",items:["武汉江岸","武汉江汉","武汉硚口","武汉武昌","武汉洪山","武汉东西湖","武汉汉南","武汉蔡甸","武汉江夏","武汉黄陂","武汉新洲"]},
+    {group:"湖北地级市",items:["黄石","鄂州","孝感","黄冈","咸宁","荆州","荆门","宜昌","襄阳","十堰","随州","恩施","仙桃","潜江","天门"]},
+    {group:"周边省份",items:["长沙","岳阳","常德","南昌","九江","信阳","南阳"]}
+];
+const TARGETS=[
+    {kw:"小区",ct:"物业"},{kw:"工业园",ct:"工厂"},{kw:"工厂",ct:"工厂"},
+    {kw:"停车场",ct:"停车场"},{kw:"4S店",ct:"4S店"},{kw:"商业广场",ct:"商业"},
+    {kw:"购物中心",ct:"商业"},{kw:"学校",ct:"学校"},{kw:"医院",ct:"医院"},
+    {kw:"酒店",ct:"商业"},{kw:"物流园",ct:"工厂"},{kw:"充电站",ct:"新能源"}
+];
+const WUHAN=AREAS[0].items;
+const HUBEI_ALL=[...AREAS[0].items,...AREAS[1].items];
+const NEARBY=[...AREAS[0].items,...AREAS[1].items.slice(0,5),...AREAS[2].items];
+
+function renderAreas(){
+    var c=document.getElementById('areaCascader');c.innerHTML='';
+    AREAS.forEach(function(g){
+        var grp=document.createElement('div');grp.style.marginBottom='4px';
+        var hdr=document.createElement('div');
+        hdr.style.cssText='display:flex;align-items:center;gap:6px;padding:6px 4px;cursor:pointer;user-select:none;border-bottom:1px solid #f0f0f0';
+        hdr.innerHTML='<span style="font-size:11px;color:#1890ff">&#9654;</span><input type="checkbox" class="grp-cb" style="margin:0"><span style="font-size:13px;font-weight:600;color:#333">'+g.group+'</span><span style="font-size:11px;color:#8c8c8c;margin-left:auto" class="grp-count">0/'+g.items.length+'</span>';
+        grp.appendChild(hdr);
+        var items=document.createElement('div');items.style.cssText='display:none;padding-left:20px';
+        g.items.forEach(function(item){
+            var row=document.createElement('div');
+            row.style.cssText='display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer';
+            row.innerHTML='<input type="checkbox" class="area-cb" data-value="'+item+'" checked><span style="font-size:13px">'+item+'</span>';
+            row.onclick=function(e){if(e.target.tagName!=='INPUT'){var cb=row.querySelector('input');cb.checked=!cb.checked;}updateGrpCount(hdr,g.items.length);updateInfo();};
+            items.appendChild(row);
+        });
+        grp.appendChild(items);
+        hdr.onclick=function(e){
+            if(e.target.tagName==='INPUT'){
+                var checked=e.target.checked;
+                items.querySelectorAll('.area-cb').forEach(function(cb){cb.checked=checked;});
+                var icon=hdr.querySelector('span');
+                updateGrpCount(hdr,g.items.length);updateInfo();return;
+            }
+            if(e.target.classList.contains('grp-count'))return;
+            var icon=hdr.querySelector('span');
+            if(items.style.display==='none'){items.style.display='block';icon.innerHTML='&#9660;';}
+            else{items.style.display='none';icon.innerHTML='&#9654;';}
+        };
+        items.querySelectorAll('.area-cb').forEach(function(cb){
+            cb.addEventListener('change',function(){
+                var allChecked=items.querySelectorAll('.area-cb:checked').length===g.items.length;
+                hdr.querySelector('.grp-cb').checked=allChecked;
+                updateGrpCount(hdr,g.items.length);updateInfo();
+            });
+        });
+        hdr.querySelector('.grp-cb').checked=true;
+        updateGrpCount(hdr,g.items.length);
+        c.appendChild(grp);
+    });
+}
+function updateGrpCount(hdr,total){
+    var parent=hdr.parentElement;
+    var checked=parent.querySelectorAll('.area-cb:checked').length;
+    hdr.querySelector('.grp-count').textContent=checked+'/'+total;
+    hdr.querySelector('.grp-cb').checked=(checked===total);
+}
+function selectPreset(preset){
+    var all=AREAS.reduce(function(a,g){return a.concat(g.items)},[]);
+    var wuhan=AREAS[0].items;
+    var nearby=wuhan.concat(AREAS[1].items.slice(0,5)).concat(AREAS[2].items);
+    var targets=preset==='all'?all:preset==='wuhan'?wuhan:preset==='hubei'?wuhan.concat(AREAS[1].items):preset==='nearby'?nearby:[];
+    document.querySelectorAll('.area-cb').forEach(function(cb){
+        cb.checked=targets.indexOf(cb.dataset.value)>=0;
+    });
+    document.querySelectorAll('.grp-cb').forEach(function(cb){cb.checked=false;});
+    AREAS.forEach(function(g,i){
+        var hdr=document.getElementById('areaCascader').children[i].querySelector('.grp-cb');
+        var items=document.getElementById('areaCascader').children[i].querySelectorAll('.area-cb');
+        var allChecked=true;items.forEach(function(cb){if(!cb.checked)allChecked=false;});
+        hdr.checked=allChecked;
+        updateGrpCount(document.getElementById('areaCascader').children[i].querySelector('div'),g.items.length);
+    });
+    updateInfo();
+}
+function renderTargets(){
+    const grid=document.getElementById('targetGrid');grid.innerHTML='';
+    TARGETS.forEach(t=>{
+        const d=document.createElement('div');d.className='check-item selected';
+        d.dataset.group='target';d.dataset.value=t.kw+'|'+t.ct;
+        d.innerHTML='<input type="checkbox" checked> '+t.kw+' <span style="color:#8c8c8c;font-size:11px">('+t.ct+')</span>';
+        d.onclick=()=>{d.classList.toggle('selected');updateInfo()};grid.appendChild(d);
+    });
+}
+// Category toggle
+document.querySelectorAll('#categoryGrid .check-item').forEach(el=>{
+    el.onclick=()=>{el.classList.toggle('selected');updateInfo()};
+});
+// Channel toggle
+document.querySelectorAll('#channelGrid .check-item').forEach(el=>{
+    el.onclick=()=>{el.classList.toggle('selected');updateInfo()};
+});
+function getSelected(g){
+    if(g==='area')return Array.from(document.querySelectorAll('.area-cb:checked')).map(function(cb){return cb.dataset.value});
+    return Array.from(document.querySelectorAll('.check-item.selected[data-group="'+g+'"]')).map(function(el){return el.dataset.value});
+}
+function toggleAll(g,s){document.querySelectorAll('.check-item[data-group="'+g+'"]').forEach(el=>{el.classList.toggle('selected',s)});updateInfo()}
+// Presets moved to selectPreset()
+function selectHighValue(){toggleAll('target',false);['4S店|工厂','充电站|新能源','工业园|工厂','工厂|工厂','物流园|工厂'].forEach(v=>{const el=document.querySelector('.check-item[data-value="'+v+'"]');if(el)el.classList.add('selected')});updateInfo()}
+function updateInfo(){
+    var cat=getSelected('category').length,ch=getSelected('channel').length,a=getSelected('area').length,t=getSelected('target').length;
+    document.getElementById('comboInfo').textContent=cat+' 品类 x '+ch+' 渠道 x '+a+' 区域 x '+t+' 客户类型';
+    document.getElementById('selectedAreasCount').textContent=a;
+    var areas=getSelected('area');
+    document.getElementById('selectedAreasList').textContent=areas.length>0?areas.join(', '):'未选择';
+}
+
+// old isRunning removed;
+function startHarvest(){
+    if(isRunning||projRunning)return;
+    var channels=getSelected('channel'),areas=getSelected('area');
+    var targets=getSelected('target').map(function(v){var p=v.split('|');return{keyword:p[0],customer_type:p[1]}});
+    if(!areas.length||!targets.length){showToast('请至少选择1个区域和1个客户类型','error');return}
+    isRunning=true;
+    document.getElementById('startBtn').disabled=true;
+    showProgress();hideSummary();
+    document.querySelector('#sSkipped').parentElement.querySelector('.lbl').textContent='去重跳过';
+    fetch('/api/harvest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({areas:areas,targets:targets,channels:channels,categories:getSelected('category')})})
+    .then(function(r){return r.json()}).then(function(data){
+        if(data&&(data.ok===false||data.error)){finishProgress();showToast('Error: '+(data.error||'请求失败'),'error');return}
+    }).catch(function(err){finishProgress();showToast('Failed: '+err,'error')});
+    pollTimer=setInterval(function(){
+        if(!isRunning){clearInterval(pollTimer);pollTimer=null;return}
+        fetch('/api/harvest/progress').then(function(r){return r.json()}).then(function(p){
+            updateProgress(p);if(!p.running&&p.pct>=100)finishProgress();
+        }).catch(function(){});
+    },1000);
+}
+renderAreas();renderTargets();updateInfo();
+
+
+// Load channel stats and render chart
+(function(){
+    fetch('/api/harvest/channel_stats').then(function(r){return r.json()}).then(function(resp){
+        // Channel chart
+        var _resp = resp && resp.data ? resp.data : resp; var data = _resp.channels || [];
+        var container=document.getElementById('channelChart');
+        if(!data.length){container.innerHTML='<div style="color:#8c8c8c;font-size:13px">暂无数据</div>';return}
+        var maxTotal=1;
+        data.forEach(function(d){if(d.total>maxTotal)maxTotal=d.total});
+        var colors={total:'#1890ff',phone:'#52c41a',s:'#ff4d4f',a:'#fa8c16'};
+        var html='';
+        data.forEach(function(d){
+            var pctTotal=Math.round(d.total/maxTotal*100);
+            html+='<div class="chart-row">';
+            html+='<div class="chart-label">'+d.display+'</div>';
+            html+='<div class="chart-bar-wrap">';
+            html+='<div class="chart-bar" style="width:'+pctTotal+'%;background:'+colors.total+'"><span>'+d.total+'</span></div>';
+            html+='</div>';
+            html+='<div class="chart-val">';
+            if(d.with_phone>0) html+='<span style="color:'+colors.phone+'">☎ '+d.with_phone+'</span> ';
+            if(d.s_count>0) html+='<span style="color:'+colors.s+'">S:'+d.s_count+'</span> ';
+            if(d.a_count>0) html+='<span style="color:'+colors.a+'">A:'+d.a_count+'</span>';
+            if(d.total===0) html+='<span style="color:#d9d9d9">无数据</span>';
+            html+='</div></div>';
+        });
+        container.innerHTML=html;
+        
+        // Category chart
+        var cats = _resp.categories || [];
+        var catContainer=document.getElementById('categoryChart');
+        if(!cats.length){catContainer.innerHTML='<div style="color:#8c8c8c;font-size:13px">暂无数据</div>';return}
+        var catColors={'膜结构':'#722ed1','玻璃遮阳棚':'#13c2c2','光伏车棚':'#faad14','未分类':'#d9d9d9'};
+        var maxCat=1;
+        cats.forEach(function(c){if(c.total>maxCat)maxCat=c.total});
+        var catHtml='';
+        cats.forEach(function(c){
+            var pct=Math.round(c.total/maxCat*100);
+            var color=catColors[c.category]||'#1890ff';
+            catHtml+='<div class="chart-row">';
+            catHtml+='<div class="chart-label">'+c.category+'</div>';
+            catHtml+='<div class="chart-bar-wrap">';
+            catHtml+='<div class="chart-bar" style="width:'+pct+'%;background:'+color+'"><span>'+c.total+'</span></div>';
+            catHtml+='</div>';
+            catHtml+='<div class="chart-val">';
+            if(c.with_phone>0) catHtml+='<span style="color:#52c41a">☎ '+c.with_phone+'</span>';
+            catHtml+='</div></div>';
+        });
+        catContainer.innerHTML=catHtml;
+    }).catch(function(){});
+})();
+
+// Load coverage data
+(function(){
+    fetch('/api/harvest/coverage').then(function(r){return r.json()}).then(function(d){
+        document.getElementById('covTotal').textContent=d.total_leads;
+        document.getElementById('covPhone').textContent=d.total_with_phone;
+        document.getElementById('covAreas').textContent=d.areas_covered;
+        var tbl=document.getElementById('coverageTable');
+        if(d.details.length===0){tbl.innerHTML='<div style="color:#8c8c8c;font-size:13px">暂无数据</div>';return}
+        var html='<table style="width:100%;font-size:12px;border-collapse:collapse"><tr style="background:#fafafa"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid #f0f0f0">区域</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid #f0f0f0">客户类型</th><th style="padding:6px 8px;text-align:right;border-bottom:1px solid #f0f0f0">总数</th><th style="padding:6px 8px;text-align:right;border-bottom:1px solid #f0f0f0">有电话</th></tr>';
+        d.details.forEach(function(r){
+            html+='<tr><td style="padding:6px 8px;border-bottom:1px solid #f0f0f0">'+r.area+'</td><td style="padding:6px 8px;border-bottom:1px solid #f0f0f0">'+r.type+'</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+r.total+'</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+r.with_phone+'</td></tr>';
+        });
+        html+='</table>';
+        tbl.innerHTML=html;
+    }).catch(function(){});
+})();
+
+
+// ===================== Project Harvest =====================
+// old projRunning removed
+
+function startProjectHarvest(source){
+    if(isRunning||projRunning){showToast('采集正在运行中','error');return}
+    var maxPages=200,areaFilter='wuhan';
+    if(source==='hbcic'){maxPages=parseInt(document.getElementById('hbcicMaxPages').value)||200;areaFilter=document.getElementById('hbcicAreaFilter').value||'wuhan'}
+    projRunning=true;
+    var btnId=source==='hbcic'?'btnHbcic':'btnHbureau';
+    if(source==='project')btnId='btnProject';
+    document.getElementById(btnId).disabled=true;
+    showProgress();hideSummary();
+    document.querySelector('#sSkipped').parentElement.querySelector('.lbl').textContent='已扫描';
+    fetch('/api/harvest/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:source,max_pages:maxPages,area_filter:areaFilter})})
+    .then(function(r){return r.json()}).then(function(data){
+        if(data&&(data.ok===false||data.error)){finishProgress();showToast((data.error||'请求失败'),'error');return}
+    }).catch(function(e){finishProgress();showToast('Failed: '+e,'error')});
+    pollTimer=setInterval(function(){
+        if(!projRunning){clearInterval(pollTimer);pollTimer=null;return}
+        fetch('/api/harvest/projects/progress').then(function(r){return r.json()}).then(function(p){
+            updateProgress(p);if(!p.running&&p.pct>=100)finishProgress();
+        }).catch(function(){});
+    },1500);
+}
+
+
+// Tab switching
+function switchTab(name){
+    document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name)});
+    document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+name)});
+}
+
+// Unified progress functions
+var isRunning=false,projRunning=false,pollTimer=null;
+
+function showProgress(){document.getElementById('progressArea').style.display='block'}
+function hideSummary(){document.getElementById('summaryCards').style.display='none';document.getElementById('logArea').textContent=''}
+function updateProgress(p){
+    document.getElementById('progressFill').style.width=(p.pct||0)+'%';
+    document.getElementById('progressPct').textContent=(p.pct||0)+'%';
+    document.getElementById('progressText').textContent=p.current||'\u91c7\u96c6\u4e2d...';
+    if(p.added!==undefined)document.getElementById('sAdded').textContent=p.added||0;
+    if(p.with_phone!==undefined)document.getElementById('sPhone').textContent=p.with_phone||0;
+    if(p.skipped!==undefined)document.getElementById('sSkipped').textContent=p.skipped||0;
+    if(p.api_calls!==undefined)document.getElementById('sCalls').textContent=p.api_calls||0;
+    if(p.skip_phone!==undefined)document.getElementById('sSkipPhone').textContent=p.skip_phone;
+    if(p.skip_name!==undefined)document.getElementById('sSkipName').textContent=p.skip_name;
+    if(p.scanned!==undefined){document.getElementById('sSkipped').textContent=p.scanned||0;document.querySelector('#sSkipped').parentElement.querySelector('.lbl').textContent='\u5df2\u626b\u63cf';}
+    if(p.log_lines)document.getElementById('logArea').textContent=p.log_lines;
+}
+function finishProgress(msg){
+    isRunning=false;projRunning=false;
+    document.getElementById('startBtn').disabled=false;
+    document.querySelectorAll('.proj-card .btn').forEach(function(b){b.disabled=false});
+    document.getElementById('summaryCards').style.display='grid';
+    document.getElementById('progressText').textContent=msg||'\u91c7\u96c6\u5b8c\u6210\uff01';
+    if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+}
+
+// Auto-resume: check if any harvest is running on page load
+(function(){
+    fetch('/api/harvest/progress').then(function(r){return r.json()}).then(function(p){
+        if(p.running){
+            isRunning=true;document.getElementById('startBtn').disabled=true;
+            showProgress();updateProgress(p);
+            var lbl=document.querySelector('#sSkipped');if(lbl)lbl.parentElement.querySelector('.lbl').textContent='\u53bb\u91cd\u8df3\u8fc7';
+            pollTimer=setInterval(function(){
+                fetch('/api/harvest/progress').then(function(r){return r.json()}).then(function(p){
+                    updateProgress(p);if(!p.running&&p.pct>=100)finishProgress();
+                }).catch(function(){});
+            },1000);
+            return;
+        }
+        fetch('/api/harvest/projects/progress').then(function(r){return r.json()}).then(function(p){
+            if(p.running){
+                projRunning=true;switchTab('project');
+                var src=p.source||'hbcic';
+                var btnId=src==='hbcic'?'btnHbcic':'btnHbureau';if(src==='project')btnId='btnProject';
+                var btn=document.getElementById(btnId);if(btn)btn.disabled=true;
+                showProgress();updateProgress(p);
+                var lbl=document.querySelector('#sSkipped');if(lbl)lbl.parentElement.querySelector('.lbl').textContent='\u5df2\u626b\u63cf';
+                pollTimer=setInterval(function(){
+                    fetch('/api/harvest/projects/progress').then(function(r){return r.json()}).then(function(p){
+                        updateProgress(p);if(!p.running&&p.pct>=100)finishProgress();
+                    }).catch(function(){});
+                },1500);
+            }
+        }).catch(function(){});
+    }).catch(function(){});
+})();
+
+function showToast(msg,type){
+  try{
+    var box=document.getElementById('globalToastBox');
+    if(!box){box=document.createElement('div');box.id='globalToastBox';box.className='toast-box';document.body.appendChild(box)}
+    var d=document.createElement('div');d.className='toast-msg '+(type||'');
+    d.textContent=typeof msg==='string'?msg:JSON.stringify(msg);
+    box.appendChild(d);setTimeout(function(){try{d.remove()}catch(e){}},3500);
+  }catch(e){console.warn('[toast]',msg)}
+}
+if(typeof window.__apiFetchPatched === 'undefined'){
+  window.__apiFetchPatched = true;
+  window._nativeFetch = window.fetch;
+  window.fetch = function(url, opts){
+    var p = window._nativeFetch(url, opts);
+    if(typeof url === 'string' && url.indexOf('/api/') !== -1){
+      return p.then(function(r){
+        var ct = r.headers.get('content-type') || '';
+        if(ct.indexOf('application/json') !== -1){
+          return r.clone().json().then(function(j){
+            var inner = (j && Object.prototype.hasOwnProperty.call(j, 'data')) ? j.data : j;
+            if(!r.ok){
+              var errObj = (inner && typeof inner === 'object') ? inner : {ok:false, error:String(inner||('HTTP '+r.status))};
+              if(errObj.ok === undefined) errObj.ok = false;
+              if(!errObj.error) errObj.error = 'HTTP '+r.status;
+              return new Response(JSON.stringify(errObj), {status: r.status, statusText: r.statusText, headers: r.headers});
+            }
+            return new Response(JSON.stringify(inner), {status: r.status, statusText: r.statusText, headers: r.headers});
+          });
+        }
+        if(!r.ok){
+          return r.text().then(function(t){
+            return new Response(JSON.stringify({ok:false, error:t||('HTTP '+r.status)}), {status: r.status, statusText: r.statusText, headers: {'content-type':'application/json'}});
+          });
+        }
+        return r;
+      });
+    }
+    return p;
+  };
+}
+</script>
+</body>
+</html>
