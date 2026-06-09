@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>{{ lead.name }} - 线索详情</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#333;-webkit-text-size-adjust:100%}
+a{color:#1890ff;text-decoration:none}
+.topnav{background:#001529;color:#fff;padding:0 24px;display:flex;align-items:center;height:48px;position:sticky;top:0;z-index:100;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.topnav .logo{font-size:16px;font-weight:600;margin-right:32px;white-space:nowrap}
+.topnav a{color:rgba(255,255,255,.7);margin-right:24px;font-size:14px;white-space:nowrap;padding:12px 0}
+.topnav a:hover,.topnav a.active{color:#fff}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+.panel{background:#fff;border-radius:8px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.panel-title{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info-item{display:flex;gap:8px;font-size:14px}
+.info-item .label{color:#8c8c8c;min-width:70px;flex-shrink:0}
+.info-item .value{font-weight:500;word-break:break-all}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:8px 16px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;cursor:pointer;background:#fff;margin-right:8px;margin-bottom:8px}
+.btn:hover{border-color:#1890ff;color:#1890ff}
+.btn-primary{background:#1890ff;color:#fff;border-color:#1890ff}
+.btn-success{background:#52c41a;color:#fff;border-color:#52c41a}
+.btn-warning{background:#fa8c16;color:#fff;border-color:#fa8c16}
+.btn-danger{background:#f5222d;color:#fff;border-color:#f5222d}
+.btn-link{background:#e6f7ff;color:#1890ff;border-color:#91d5ff;padding:10px 18px;font-size:14px;word-break:break-all}
+.btn-link:hover{background:#bae7ff}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px}
+.tag-new{background:#e6f7ff;color:#1890ff}
+.tag-contacted{background:#fff7e6;color:#fa8c16}
+.tag-interested{background:#f6ffed;color:#52c41a}
+.tag-quoting{background:#f9f0ff;color:#722ed1}
+.tag-closed_won{background:#b7eb8f;color:#135200}
+.tag-closed_lost{background:#ffa39e;color:#cf1322}
+.lv-tag{display:inline-block;padding:4px 12px;border-radius:4px;font-size:14px;font-weight:700;min-width:36px;text-align:center}
+.lv-S{background:#cf1322;color:#fff}
+.lv-A{background:#d46b08;color:#fff}
+.lv-B{background:#1890ff;color:#fff}
+.lv-C{background:#d9d9d9;color:#666}
+.msg-list{max-height:400px;overflow-y:auto}
+.msg-item{padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.msg-item .meta{color:#8c8c8c;font-size:12px;margin-bottom:4px}
+.msg-item .out{color:#1890ff}
+.msg-item .in{color:#52c41a}
+.action-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+select,textarea{padding:6px 10px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;font-family:inherit}
+textarea{width:100%;height:80px;resize:vertical}
+.source-url-box{padding:14px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:6px;margin:12px 0}
+.source-url-box .url-label{font-size:12px;color:#8c8c8c;margin-bottom:6px}
+.source-url-box a{font-size:14px;word-break:break-all;line-height:1.6}
+.demand-box{padding:14px;background:#fffbe6;border:1px solid #ffe58f;border-radius:6px;margin:12px 0}
+.demand-box .demand-label{font-size:12px;color:#8c8c8c;margin-bottom:6px}
+.demand-box .demand-text{font-size:14px;line-height:1.8;white-space:pre-wrap}
+.optout-tag{background:#ffa39e;color:#cf1322;font-size:11px;padding:2px 8px;border-radius:3px}
+.sleep-tag{background:#d9d9d9;color:#666;font-size:11px;padding:2px 8px;border-radius:3px}
+.score-detail{font-size:12px;color:#8c8c8c;margin-top:4px}
+@media(max-width:768px){
+    .container{padding:12px}
+    .info-grid{grid-template-columns:1fr;gap:8px}
+    .action-bar{flex-direction:column}
+    .action-bar .btn{width:100%;justify-content:center;margin-right:0}
+}
+
+.toast-box{position:fixed;right:16px;bottom:16px;z-index:99999;display:flex;flex-direction:column;gap:8px}
+.toast-msg{padding:10px 14px;border-radius:6px;background:#fffbe6;border:1px solid #ffe58f;color:#ad6800;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.toast-msg.error{background:#fff1f0;border:1px solid #ffa39e;color:#a8071a}
+.toast-msg.ok{background:#f6ffed;border:1px solid #b7eb8f;color:#237804}
+</style>
+</head>
+<body>
+<div class="topnav">
+    <div class="logo">获客管理系统</div>
+    <a href="/">仪表盘</a>
+    <a href="/leads" class="active">线索管理</a>
+    <a href="/harvest">采集控制</a>
+</div>
+<div class="container">
+    <p style="margin-bottom:16px;font-size:13px"><a href="/leads">线索列表</a> / {{ lead.name }}</p>
+
+    <!-- Basic info -->
+    <div class="panel">
+        <div class="panel-title">
+            {{ lead.name }}
+            <span class="lv-tag lv-{{ lead.lead_level }}">{{ lead.lead_level }}</span>
+            <span class="tag tag-{{ lead.status }}">{{ lead.status_label }}</span>
+            {% if lead.is_opt_out %}<span class="optout-tag">已退订</span>{% endif %}
+            {% if lead.sleep_status %}<span class="sleep-tag">沉睡中</span>{% endif %}
+        </div>
+        <div class="score-detail">
+            总分: <strong>{{ lead.total_score }}</strong>
+            (渠道{{ lead.source_score }} + 关键词{{ lead.keyword_score }} + 地域{{ lead.area_score }} + 类型{{ lead.corp_score }})
+        </div>
+        <div class="info-grid" style="margin-top:12px">
+            <div class="info-item"><span class="label">联系人</span><span class="value">{{ lead.contact_person or '-' }}</span></div>
+            <div class="info-item"><span class="label">电话</span><span class="value">{% if lead.phone %}<a href="tel:{{ lead.phone }}" style="color:#52c41a;font-weight:600;font-size:16px">{{ lead.phone }}</a>{% else %}-{% endif %}</span></div>
+            <div class="info-item"><span class="label">邮箱</span><span class="value">{{ lead.email or '-' }}</span></div>
+            <div class="info-item"><span class="label">微信</span><span class="value">{{ lead.wechat or '-' }}</span></div>
+            <div class="info-item"><span class="label">地址</span><span class="value">{{ lead.address or '-' }}</span></div>
+            <div class="info-item"><span class="label">来源</span><span class="value">{{ lead.source }}</span></div>
+            <div class="info-item"><span class="label">客户类型</span><span class="value">{{ lead.customer_type or '-' }}</span></div>
+            <div class="info-item"><span class="label">区域</span><span class="value">{{ lead.area or '-' }}</span></div>
+            <div class="info-item"><span class="label">意向产品</span><span class="value">{{ lead.product_interest or '-' }}</span></div>
+            <div class="info-item"><span class="label">联系次数</span><span class="value">{{ lead.contact_count }}</span></div>
+            <div class="info-item"><span class="label">最近联系</span><span class="value">{{ lead.last_contact_at.strftime('%Y-%m-%d %H:%M') if lead.last_contact_at else '-' }}</span></div>
+            <div class="info-item"><span class="label">创建时间</span><span class="value">{{ lead.created_at.strftime('%Y-%m-%d %H:%M') if lead.created_at else '-' }}</span></div>
+            <div class="info-item"><span class="label">分配给</span><span class="value">{{ lead.assigned_to or '未分配' }}</span></div>
+        </div>
+
+        <!-- Source URL - prominently displayed -->
+        {% if lead.source_url %}
+        <div class="source-url-box">
+            <div class="url-label">溯源链接 - 点击查看原始信息</div>
+            <a href="{{ lead.source_url }}" target="_blank" rel="noopener">{{ lead.source_url }}</a>
+        </div>
+        {% endif %}
+
+        <!-- Bid info extraction button (only for bidding leads) -->
+        {% if lead.source_url and lead.source == '招标平台' %}
+        <div style="margin:12px 0">
+            <button class="btn btn-primary" id="parseBtn" onclick="parseBid()">提取招标信息</button>
+            <span id="parseStatus" style="font-size:12px;color:#8c8c8c;margin-left:8px"></span>
+        </div>
+        <div id="bidInfoBox" style="display:none">
+            <div class="panel" style="background:#f0f5ff;border:1px solid #adc6ff">
+                <div class="panel-title" style="font-size:14px">招标信息结构化提炼</div>
+                <div class="info-grid">
+                    <div class="info-item"><span class="label">项目名</span><span class="value" id="bid_name">-</span></div>
+                    <div class="info-item"><span class="label">预算</span><span class="value" id="bid_budget" style="color:#cf1322;font-weight:700">-</span></div>
+                    <div class="info-item"><span class="label">采购人</span><span class="value" id="bid_purchaser">-</span></div>
+                    <div class="info-item"><span class="label">联系方式</span><span class="value" id="bid_contact" style="color:#52c41a;font-weight:600">-</span></div>
+                    <div class="info-item"><span class="label">地址</span><span class="value" id="bid_addr">-</span></div>
+                    <div class="info-item"><span class="label">代理机构</span><span class="value" id="bid_agency">-</span></div>
+                    <div class="info-item"><span class="label">投标截止</span><span class="value" id="bid_deadline" style="color:#fa8c16;font-weight:600">-</span></div>
+                    <div class="info-item"><span class="label">开标时间</span><span class="value" id="bid_open">-</span></div>
+                    <div class="info-item"><span class="label">文件获取</span><span class="value" id="bid_doc">-</span></div>
+                    <div class="info-item"><span class="label">实施地点</span><span class="value" id="bid_location">-</span></div>
+                </div>
+                <div id="bid_req_box" style="display:none;margin-top:12px;padding:12px;background:#fffbe6;border:1px solid #ffe58f;border-radius:4px">
+                    <div style="font-size:12px;color:#8c8c8c;margin-bottom:6px">硬性条件</div>
+                    <pre id="bid_req" style="white-space:pre-wrap;font-size:13px;line-height:1.6"></pre>
+                </div>
+                <div style="margin-top:12px">
+                    <button class="btn btn-success" onclick="saveBidInfo()">保存到备注</button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Demand description -->
+        {% if lead.demand_desc %}
+        <div class="demand-box">
+            <div class="demand-label">需求描述 / 项目信息</div>
+            <div class="demand-text">{{ lead.demand_desc }}</div>
+        </div>
+        {% endif %}
+
+        {% if lead.notes %}
+        <div style="margin-top:12px;padding:12px;background:#f5f5f5;border-radius:4px;font-size:13px">
+            <strong>备注：</strong><pre style="white-space:pre-wrap;margin-top:4px">{{ lead.notes }}</pre>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Actions -->
+    <div class="panel">
+        <div class="panel-title">快捷操作</div>
+        <div class="action-bar">
+            <button class="btn btn-primary" onclick="updateStatus('contacted')">标记已联系</button>
+            <button class="btn btn-success" onclick="updateStatus('interested')">标记有意向</button>
+            <button class="btn btn-warning" onclick="updateStatus('quoting')">进入报价</button>
+            <button class="btn" style="background:#52c41a;color:#fff;border-color:#52c41a" onclick="updateStatus('closed_won')">标记成交</button>
+            <button class="btn btn-danger" onclick="updateStatus('closed_lost')">标记流失</button>
+        </div>
+        <div style="margin-top:12px">
+            <label style="font-size:13px;font-weight:500">加分：</label>
+            <button class="btn" onclick="addScore(10)">+10</button>
+            <button class="btn" onclick="addScore(20)">+20</button>
+            <button class="btn" onclick="addScore(30)">+30</button>
+        </div>
+        <div style="margin-top:16px">
+            <label style="font-size:13px;font-weight:500">发送消息：</label>
+            <textarea id="msgContent" placeholder="输入消息内容..."></textarea>
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="sendMsg('manual')">发送并记录</button>
+                {% if lead.phone %}
+                <button class="btn" onclick="sendMsg('sms')">发送短信</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="panel">
+        <div class="panel-title">消息记录 ({{ messages|length }})</div>
+        <div class="msg-list">
+            {% for msg in messages %}
+            <div class="msg-item">
+                <div class="meta">
+                    <span class="{% if msg.direction=='out' %}out{% else %}in{% endif %}">{% if msg.direction=='out' %}[发出]{% else %}[收到]{% endif %}</span>
+                    {{ msg.channel }}{% if msg.template_name %} | {{ msg.template_name }}{% endif %} | {{ msg.status }}
+                    | {{ msg.created_at.strftime('%Y-%m-%d %H:%M') if msg.created_at else '' }}
+                </div>
+                <div>{{ msg.content }}</div>
+            </div>
+            {% endfor %}
+            {% if not messages %}
+            <p style="color:#8c8c8c;text-align:center;padding:30px 0">暂无消息记录</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+const lid={{ lead.id }};
+function updateStatus(s){
+    const n=prompt('备注（可选）：');
+    fetch('/api/leads/'+lid+'/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:s,note:n})}).then(r=>r.json()).then(()=>location.reload());
+}
+function addScore(d){
+    fetch('/api/leads/'+lid+'/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({delta:d})}).then(r=>r.json()).then(()=>location.reload());
+}
+let bidData={};
+function parseBid(){
+    const btn=document.getElementById('parseBtn');
+    const status=document.getElementById('parseStatus');
+    btn.disabled=true;btn.textContent='提取中...';status.textContent='正在获取页面内容...';
+    fetch('/api/parse_bid/'+lid).then(r=>r.json()).then(_raw=>{var data=(_raw&&_raw.data!==undefined)?_raw.data:_raw;
+        btn.disabled=false;btn.textContent='提取招标信息';status.textContent='';
+        if(data.error){status.textContent='错误: '+data.error;return}
+        bidData=data;
+        document.getElementById('bidInfoBox').style.display='block';
+        document.getElementById('bid_name').textContent=data.project_name||'-';
+        document.getElementById('bid_budget').textContent=data.budget||'-';
+        document.getElementById('bid_purchaser').textContent=data.purchaser||'-';
+        document.getElementById('bid_contact').textContent=data.purchaser_contact||'-';
+        document.getElementById('bid_addr').textContent=data.purchaser_address||'-';
+        document.getElementById('bid_agency').textContent=data.agency||'-';
+        document.getElementById('bid_deadline').textContent=data.bid_deadline||'-';
+        document.getElementById('bid_open').textContent=data.open_time||'-';
+        document.getElementById('bid_doc').textContent=data.doc_period||'-';
+        document.getElementById('bid_location').textContent=data.location||'-';
+        if(data.requirements){
+            document.getElementById('bid_req_box').style.display='block';
+            document.getElementById('bid_req').textContent=data.requirements;
+        }
+    }).catch(err=>{btn.disabled=false;btn.textContent='提取招标信息';status.textContent='请求失败: '+err});
+}
+function saveBidInfo(){
+    fetch('/api/parse_bid/'+lid+'/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bidData)})
+    .then(r=>r.json()).then(()=>{showToast('已保存到备注','ok');location.reload()});
+}
+function sendMsg(ch){
+    const c=document.getElementById('msgContent').value.trim();
+    if(!c){showToast('请输入消息内容','error');return}
+    fetch('/api/leads/'+lid+'/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:c,channel:ch})}).then(r=>r.json()).then(()=>{document.getElementById('msgContent').value='';location.reload()});
+}
+
+function copyText(t){if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){showToast('已复制: '+t)})}else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('已复制: '+t)}}
+,2000)}
+
+
+function showToast(msg,type){
+  try{
+    var box=document.getElementById('globalToastBox');
+    if(!box){box=document.createElement('div');box.id='globalToastBox';box.className='toast-box';document.body.appendChild(box)}
+    var d=document.createElement('div');d.className='toast-msg '+(type||'');
+    d.textContent=typeof msg==='string'?msg:JSON.stringify(msg);
+    box.appendChild(d);setTimeout(function(){try{d.remove()}catch(e){}},3500);
+  }catch(e){console.warn('[toast]',msg)}
+}
+if(typeof window.__apiFetchPatched === 'undefined'){
+  window.__apiFetchPatched = true;
+  window._nativeFetch = window.fetch;
+  window.fetch = function(url, opts){
+    var p = window._nativeFetch(url, opts);
+    if(typeof url === 'string' && url.indexOf('/api/') !== -1){
+      return p.then(function(r){
+        var ct = r.headers.get('content-type') || '';
+        if(ct.indexOf('application/json') !== -1){
+          return r.clone().json().then(function(j){
+            var inner = (j && Object.prototype.hasOwnProperty.call(j, 'data')) ? j.data : j;
+            if(!r.ok){
+              var errObj = (inner && typeof inner === 'object') ? inner : {ok:false, error:String(inner||('HTTP '+r.status))};
+              if(errObj.ok === undefined) errObj.ok = false;
+              if(!errObj.error) errObj.error = 'HTTP '+r.status;
+              return new Response(JSON.stringify(errObj), {status: r.status, statusText: r.statusText, headers: r.headers});
+            }
+            return new Response(JSON.stringify(inner), {status: r.status, statusText: r.statusText, headers: r.headers});
+          });
+        }
+        if(!r.ok){
+          return r.text().then(function(t){
+            return new Response(JSON.stringify({ok:false, error:t||('HTTP '+r.status)}), {status: r.status, statusText: r.statusText, headers: {'content-type':'application/json'}});
+          });
+        }
+        return r;
+      });
+    }
+    return p;
+  };
+}
+</script>
+
+<!-- Project Contacts Section -->
+<div class="panel" style="border-top:3px solid #13c2c2">
+    <div class="panel-title">项目联系人信息
+        <button onclick="loadProjectContacts()" style="padding:4px 12px;background:#13c2c2;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">提取联系人</button>
+    </div>
+    <div id="projectContacts" style="min-height:40px">
+        <div style="color:#8c8c8c;font-size:13px">点击“提取联系人”查看相关项目中的联系人和电话信息</div>
+    </div>
+</div>
+
+<script>
+function loadProjectContacts(){
+    var box=document.getElementById("projectContacts");
+    box.innerHTML='<div style="color:#1890ff;padding:10px">加载中...</div>';
+    fetch("/api/leads/"+lid+"/contacts").then(r=>r.json()).then(_raw=>{var data=(_raw&&_raw.data!==undefined)?_raw.data:_raw;
+        var contacts=data.contacts||[];
+        if(!contacts.length){
+            box.innerHTML='<div style="color:#8c8c8c;font-size:13px">暂无相关项目联系人信息</div>';
+            return;
+        }
+        var html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px">';
+        contacts.forEach(function(c){
+            html+='<div style="border:1px solid #e8e8e8;border-radius:8px;padding:14px;background:#fafafa">';
+            html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+            html+='<a href="/lead/'+c.id+'" style="font-size:14px;font-weight:600;color:#1890ff;text-decoration:none">'+c.name+'</a>';
+            html+='<span style="font-size:11px;color:#8c8c8c;background:#f0f0f0;padding:2px 6px;border-radius:3px">'+(c.source||'')+'</span>';
+            html+='</div>';
+            if(c.contact_person){
+                html+='<div style="font-size:13px;margin-bottom:4px"><b>联系人:</b> '+c.contact_person+'</div>';
+            }
+            if(c.phones&&c.phones.length){
+                html+='<div style="font-size:13px;margin-bottom:4px"><b>电话:</b> ';
+                c.phones.forEach(function(p,i){
+                    if(i>0) html+=' / ';
+                    html+='<a href="tel:'+p+'" style="color:#52c41a;font-weight:600">'+p+'</a>';
+                    html+=' <span style="cursor:pointer;color:#1890ff;font-size:11px" onclick="copyText(''+p+'')">复制</span>';
+                });
+                html+='</div>';
+            }
+            if(c.address){
+                html+='<div style="font-size:12px;color:#666;margin-bottom:4px"><b>地址:</b> '+c.address+'</div>';
+            }
+            if(c.demand_snippet){
+                html+='<div style="font-size:12px;color:#666"><b>需求:</b> '+c.demand_snippet+'</div>';
+            }
+            html+='</div>';
+        });
+        html+='</div>';
+        box.innerHTML=html;
+    }).catch(function(e){
+        box.innerHTML='<div style="color:#cf1322">加载失败: '+e+'</div>';
+    });
+}
+
+</body>
+</html>
